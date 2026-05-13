@@ -3480,36 +3480,40 @@ function updateFighter(f, t, dt) {
       break;
     }
     case 'ko': {
-      // Topple onto back via quaternion slerp. The simple Euler rotation
-      // before couldn't actually express "fall backward + lay face-up" because
-      // of how the fighter's rotation.y stacks with rotation.z. Quaternion
-      // slerp from upright-facing-inward to lying-flat-face-up.
-      const dur = 1.5;
+      // Direct Euler component interpolation. The previous quaternion slerp
+      // wasn't producing a visible fall — switching to explicit Euler lerp
+      // with known-good endpoints so the loser is GUARANTEED to end up lying
+      // flat on the canvas regardless of mid-animation imperfections.
+      //
+      // Start orientation (XYZ): (0, side === -1 ? +π/2 : -π/2, 0)
+      // End orientation (XYZ):  (-π/2, 0, side === -1 ? +π/2 : -π/2)
+      //   → places local +y (head) → world ±x (AWAY from opponent)
+      //   → places local +z (face) → world +y (face up)
+      const dur = 1.4;
       const raw = Math.min(1, f.stateTimer / dur);
       const k = 1 - Math.pow(1 - raw, 3); // ease-out cubic
-      if (!f.koStartQuat) {
-        f.koStartQuat = g.quaternion.clone();
-        // Final orientation: head pointed AWAY from opponent (world -x for
-        // left fighter, world +x for right), face pointing UP (world +y).
-        // Derived target Euler (XYZ): (-π/2, 0, side === -1 ? +π/2 : -π/2)
-        f.koEndQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(
-          -Math.PI / 2, 0, f.side === -1 ? Math.PI / 2 : -Math.PI / 2
-        ));
-      }
-      g.quaternion.slerpQuaternions(f.koStartQuat, f.koEndQuat, k);
-      // Slide backward a bit (away from opponent) + drop to canvas level.
-      // Body axis after rotation is horizontal along world x, so we sit the
-      // fighter's hip-pivot a bit above y=0 so the body silhouette rests on
-      // the canvas surface instead of sinking through it.
-      g.position.x = f.side * 0.75 + f.side * k * 0.6;
-      g.position.y = k * 0.2;
+
+      const startX = 0;
+      const startY = f.side === -1 ? Math.PI / 2 : -Math.PI / 2;
+      const startZ = 0;
+      const endX = -Math.PI / 2;
+      const endY = 0;
+      const endZ = f.side === -1 ? Math.PI / 2 : -Math.PI / 2;
+
+      g.rotation.x = startX + (endX - startX) * k;
+      g.rotation.y = startY + (endY - startY) * k;
+      g.rotation.z = startZ + (endZ - startZ) * k;
+
+      // Slide backward away from opponent, drop body to canvas, impact bounce
+      g.position.x = f.side * 0.75 + f.side * k * 0.7;
+      g.position.y = k * 0.25;
       g.position.z = 0;
-      // Impact bounce when the body hits the canvas (around 80% of the fall)
       const bounceK = Math.max(0, 1 - Math.abs(raw - 0.8) * 8);
-      g.position.y += bounceK * 0.15;
-      // Arms splay out to the sides as they fall
-      targetArmL = { rx: -0.2 + k * 0.6, rz: 1.3 };
-      targetArmR = { rx: -0.2 + k * 0.6, rz: -1.3 };
+      g.position.y += bounceK * 0.18;
+
+      // Arms splay out as they hit the canvas
+      targetArmL = { rx: -0.2 + k * 0.8, rz: 1.3 };
+      targetArmR = { rx: -0.2 + k * 0.8, rz: -1.3 };
       break;
     }
     case 'victory': {
