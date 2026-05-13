@@ -2,8 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>BATTLE OF BELIEFS</title>
+<meta name="description" content="Theological boxing simulator — pit 13 belief systems against each other in a WebGL ring." />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://battle-of-beliefs.vercel.app/" />
+<meta property="og:title" content="BATTLE OF BELIEFS — Theological Throwdown" />
+<meta property="og:description" content="Pit 13 belief systems against each other in a WebGL boxing ring." />
+<meta property="og:image" content="https://battle-of-beliefs.vercel.app/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="BATTLE OF BELIEFS" />
+<meta name="twitter:description" content="Theological boxing simulator. Pick two beliefs. Watch them throw down." />
+<meta name="twitter:image" content="https://battle-of-beliefs.vercel.app/og.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Bebas+Neue&family=Special+Elite&display=swap" rel="stylesheet" />
@@ -341,6 +357,82 @@
     color: #777;
     text-transform: uppercase;
   }
+
+  /* Social-share row inside the notecard */
+  #share-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .share-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 2px solid #1a1a1a;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.12em;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: filter 0.15s, transform 0.05s, box-shadow 0.05s;
+    box-shadow: 3px 3px 0 #000;
+  }
+  .share-btn:hover { filter: brightness(1.1); }
+  .share-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+  .share-btn svg { display: block; }
+  .share-x  { background: #111; color: #fff; }
+  .share-fb { background: #1877f2; color: #fff; }
+  .share-ig { background: linear-gradient(135deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888); color: #fff; }
+  .share-save { background: var(--gold); color: #1a0a02; }
+  .share-only-mobile { display: none; }
+
+  /* Mobile: single-column buttons, stacked controls, tighter layout */
+  @media (max-width: 760px) {
+    #hud { padding: 14px 12px 8px; }
+    #title { font-size: clamp(26px, 7vw, 42px); }
+    #title small { font-size: 0.32em; letter-spacing: 0.3em; }
+    #matchmake {
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .mm-label { font-size: 13px; padding: 4px 10px; }
+    .vs-pill { font-size: 12px; padding: 4px 12px; }
+    .dropdown { width: 100%; min-width: 0; max-width: 92vw; }
+    .dropdown-trigger { font-size: 22px; padding: 12px 38px 12px 16px; }
+    .dropdown-list li { padding: 14px 16px; font-size: 20px; }
+    #ringbell { width: 100%; max-width: 92vw; justify-content: center; padding: 14px 18px; font-size: 22px; }
+    #ringbell .bell-svg { width: 32px; height: 32px; }
+    #timer { font-size: 32px; top: 12px; right: 12px; padding: 2px 12px; }
+    #fighter-tags { padding: 0 10px; bottom: 14px; }
+    .fighter-tag { font-size: 13px; padding: 6px 10px; max-width: 46vw; }
+    .fighter-tag .corner { font-size: 0.5em; letter-spacing: 0.18em; }
+    #notecard { padding: 24px 22px 28px; width: 94vw; }
+    #notecard h2 { font-size: 18px; }
+    #notecard .winner-line { font-size: clamp(20px, 5.5vw, 28px); }
+    #notecard .move-line { font-size: 14px; }
+    #notecard .quip { font-size: 16px; line-height: 1.4; }
+    #notecard .fineprint { font-size: 9px; }
+    .share-btn { flex-basis: calc(50% - 4px); font-size: 14px; min-height: 44px; padding: 8px 10px; letter-spacing: 0.08em; }
+    .share-btn span { display: inline-block; }
+    .credit { display: none; }
+    #replay { font-size: 14px; padding: 8px 16px; bottom: 14px; }
+  }
+  @media (max-width: 380px) {
+    .share-btn { flex-basis: calc(50% - 4px); font-size: 12px; }
+    .share-btn svg { width: 14px; height: 14px; }
+  }
+  /* Tablet portrait tweaks */
+  @media (max-width: 1024px) and (orientation: portrait) {
+    #notecard-wrap { padding: 0 8px; }
+  }
+  /* Avoid pinch-zoom while interacting with the canvas on touch */
+  canvas#stage { touch-action: none; }
   #replay {
     position: fixed;
     bottom: 38px;
@@ -443,6 +535,24 @@
     <div class="move-line" id="nc-move"></div>
     <div class="quip" id="nc-quip"></div>
     <div class="fineprint">SIGNED, THE RING GIRL · BATTLE OF BELIEFS COMMISSION</div>
+    <div id="share-row">
+      <button class="share-btn share-x" id="share-x" type="button" aria-label="Share to X">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18.244 2H21l-6.49 7.41L22 22h-6.78l-4.7-6.14L4.96 22H2.2l6.94-7.93L2 2h6.94l4.25 5.61L18.24 2Zm-2.38 18.42h1.51L7.21 3.48H5.6l10.26 16.94Z"/></svg>
+        <span>X</span>
+      </button>
+      <button class="share-btn share-fb" id="share-fb" type="button" aria-label="Share to Facebook">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M13 22v-8h2.7l.4-3.1H13V8.9c0-.9.3-1.6 1.6-1.6h1.7v-2.8C16 4.4 14.9 4.3 13.9 4.3c-2.6 0-4.4 1.6-4.4 4.5v2.1H7V14h2.5v8H13Z"/></svg>
+        <span>FACEBOOK</span>
+      </button>
+      <button class="share-btn share-ig" id="share-ig" type="button" aria-label="Share to Instagram">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3Zm-5 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm5.4-2.9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Z"/></svg>
+        <span>INSTAGRAM</span>
+      </button>
+      <button class="share-btn share-save" id="share-save" type="button" aria-label="Save image">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3v11.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-4.7 1.4-1.4L12 14.6V3h0Zm-8 14h16v2H4v-2Z"/></svg>
+        <span>SAVE IMAGE</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -731,7 +841,7 @@ M('Atheism', 'Techno-Utopiaism', 'Techno-Utopiaism',
    THREE.JS SCENE
    ============================================================ */
 const canvas = document.getElementById('stage');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -749,6 +859,12 @@ function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
+  // Mobile / portrait: widen the FOV and pull the camera back so the ring fits horizontally
+  const portrait = w < h;
+  const narrow = w < 700;
+  camera.fov = portrait ? (narrow ? 62 : 50) : 38;
+  camera.position.set(0, portrait ? 4.8 : 5.6, portrait ? (narrow ? 16.5 : 15) : 13.5);
+  camera.lookAt(0, 1.5, 0);
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
@@ -2958,6 +3074,221 @@ document.getElementById('replay').addEventListener('click', () => {
   document.getElementById('replay').classList.remove('show');
   const [b1, b2] = getPickedBeliefs();
   startBout(b1, b2);
+});
+
+/* ============================================================
+   SOCIAL SHARING
+   Generates a 1080x1080 composite image (canvas screenshot + verdict
+   panel + branding) and shares it via:
+     - Web Share API with file (mobile — routes to Instagram, etc.)
+     - Twitter/X intent URL (desktop fallback)
+     - Facebook sharer URL (desktop fallback)
+     - Download (Instagram fallback + Save Image button)
+   ============================================================ */
+const SITE_URL = 'https://battle-of-beliefs.vercel.app';
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 5) {
+  const words = text.split(' ');
+  let line = '';
+  const lines = [];
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  const shown = lines.slice(0, maxLines);
+  if (lines.length > maxLines) shown[maxLines - 1] = shown[maxLines - 1].replace(/\s*\S+$/, '…');
+  shown.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+  return shown.length * lineHeight;
+}
+
+function generateShareImage() {
+  // Force a fresh render so the canvas pixel buffer is up to date
+  renderer.render(scene, camera);
+
+  const W = 1080, H = 1080;
+  const out = document.createElement('canvas');
+  out.width = W; out.height = H;
+  const ctx = out.getContext('2d');
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#1a0a08');
+  bg.addColorStop(1, '#050505');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Top red banner
+  ctx.fillStyle = '#c8102e';
+  ctx.fillRect(0, 0, W, 140);
+  ctx.fillStyle = '#d6a737';
+  ctx.fillRect(0, 132, W, 8);
+  ctx.fillStyle = '#fff5c8';
+  ctx.font = 'bold 78px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('BATTLE OF BELIEFS', W / 2, 64);
+  ctx.fillStyle = '#fff8d8';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillText('· THE THEOLOGICAL THROWDOWN ·', W / 2, 108);
+
+  // Scene screenshot (crop center area of canvas) inside a framed region
+  const src = renderer.domElement;
+  const dstX = 30, dstY = 160, dstW = 1020, dstH = 540;
+  // Compute source crop that matches dst aspect ratio (1020/540 ≈ 1.89)
+  const srcAspect = src.width / src.height;
+  const dstAspect = dstW / dstH;
+  let sX = 0, sY = 0, sW = src.width, sH = src.height;
+  if (srcAspect > dstAspect) {
+    // source wider than dst — crop sides
+    sW = src.height * dstAspect;
+    sX = (src.width - sW) / 2;
+  } else {
+    // source taller — crop top/bottom
+    sH = src.width / dstAspect;
+    sY = (src.height - sH) / 2;
+  }
+  ctx.fillStyle = '#000';
+  ctx.fillRect(dstX - 4, dstY - 4, dstW + 8, dstH + 8);
+  try {
+    ctx.drawImage(src, sX, sY, sW, sH, dstX, dstY, dstW, dstH);
+  } catch (e) {
+    ctx.fillStyle = '#222';
+    ctx.fillRect(dstX, dstY, dstW, dstH);
+    ctx.fillStyle = '#666';
+    ctx.font = '32px sans-serif';
+    ctx.fillText('(screenshot unavailable)', W / 2, dstY + dstH / 2);
+  }
+  // Gold frame around screenshot
+  ctx.strokeStyle = '#d6a737';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(dstX, dstY, dstW, dstH);
+
+  // Verdict card
+  const cardX = 30, cardY = 730, cardW = 1020, cardH = 290;
+  ctx.fillStyle = '#fff7df';
+  ctx.fillRect(cardX, cardY, cardW, cardH);
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(cardX, cardY, cardW, cardH);
+  // Small red "VERDICT" tag
+  ctx.fillStyle = '#c8102e';
+  ctx.fillRect(cardX + 32, cardY + 22, 160, 36);
+  ctx.fillStyle = '#fff7df';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('VERDICT', cardX + 50, cardY + 47);
+
+  // Winner line
+  ctx.fillStyle = '#1a1a1a';
+  ctx.font = 'bold 44px sans-serif';
+  ctx.textAlign = 'center';
+  const w = bout?.winnerName ?? '—';
+  const l = bout?.loserName ?? '—';
+  ctx.fillText(`${w.toUpperCase()} defeats ${l.toUpperCase()}`, W / 2, cardY + 100);
+
+  // Move line
+  ctx.fillStyle = '#8a3a13';
+  ctx.font = 'italic 26px serif';
+  ctx.fillText(`Winning move: ${bout?.move ?? '—'}.`, W / 2, cardY + 146);
+
+  // Quip (wraps)
+  ctx.fillStyle = '#1a1a1a';
+  ctx.font = '28px "Times New Roman", serif';
+  ctx.textAlign = 'center';
+  wrapText(ctx, `"${bout?.quip ?? ''}"`, W / 2, cardY + 196, cardW - 80, 36, 3);
+
+  // Footer URL strip
+  ctx.fillStyle = '#d6a737';
+  ctx.fillRect(0, H - 50, W, 50);
+  ctx.fillStyle = '#1a0a02';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('battle-of-beliefs.vercel.app', W / 2, H - 25);
+
+  return out;
+}
+
+function canvasToBlob(canvas, type = 'image/png') {
+  return new Promise(resolve => canvas.toBlob(resolve, type, 0.92));
+}
+function downloadCanvas(canvas, name = 'battle-of-beliefs.png') {
+  canvas.toBlob(blob => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  });
+}
+
+function shareText() {
+  const w = bout?.winnerName ?? '';
+  const l = bout?.loserName ?? '';
+  const q = bout?.quip ?? '';
+  return `${w} defeats ${l} — Battle of Beliefs.\n\n"${q}"\n`;
+}
+
+async function shareViaWebShare(filename = 'battle-of-beliefs.png') {
+  if (!navigator.share) return false;
+  try {
+    const canvas = generateShareImage();
+    const blob = await canvasToBlob(canvas);
+    const file = new File([blob], filename, { type: 'image/png' });
+    const shareData = { files: [file], text: shareText(), url: SITE_URL };
+    if (navigator.canShare && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+      return true;
+    }
+    // Fallback: share text + URL only (no file)
+    await navigator.share({ text: shareText(), url: SITE_URL });
+    return true;
+  } catch (e) {
+    if (e.name === 'AbortError') return true; // user cancelled — treat as handled
+    return false;
+  }
+}
+
+document.getElementById('share-x').addEventListener('click', async () => {
+  // Try Web Share API first on mobile (lets user pick X with the image attached)
+  if (navigator.share && /Mobi|Android|iPhone|iPad/.test(navigator.userAgent)) {
+    if (await shareViaWebShare()) return;
+  }
+  const text = encodeURIComponent(shareText());
+  const url = encodeURIComponent(SITE_URL);
+  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'noopener,noreferrer');
+});
+
+document.getElementById('share-fb').addEventListener('click', async () => {
+  if (navigator.share && /Mobi|Android|iPhone|iPad/.test(navigator.userAgent)) {
+    if (await shareViaWebShare()) return;
+  }
+  // Facebook sharer pulls og:image + title from the URL's meta tags
+  const url = encodeURIComponent(SITE_URL);
+  const quote = encodeURIComponent(shareText());
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`, '_blank', 'noopener,noreferrer');
+});
+
+document.getElementById('share-ig').addEventListener('click', async () => {
+  // Instagram has no web-share URL — try Web Share API first (lets the user pick
+  // Instagram on mobile with the image attached), otherwise download the image.
+  if (await shareViaWebShare()) return;
+  const canvas = generateShareImage();
+  downloadCanvas(canvas, 'battle-of-beliefs-instagram.png');
+  alert("Saved! Instagram doesn't support direct web posting. Open Instagram and upload the saved image to share.");
+});
+
+document.getElementById('share-save').addEventListener('click', () => {
+  const canvas = generateShareImage();
+  downloadCanvas(canvas, `battle-of-beliefs-${(bout?.winnerName ?? 'verdict').toLowerCase().replace(/\W+/g, '-')}.png`);
 });
 
 // Friendly idle preview: build two placeholder fighters
