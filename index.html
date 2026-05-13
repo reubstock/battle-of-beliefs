@@ -30,6 +30,10 @@
     --crimson: #c8102e;
     --gold: #d6a737;
     --shadow: rgba(0,0,0,0.55);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -39,6 +43,9 @@
     color: var(--ink);
     font-family: 'Bebas Neue', system-ui, sans-serif;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
   }
   canvas#stage {
     position: fixed; inset: 0;
@@ -50,7 +57,7 @@
   #hud {
     position: fixed;
     top: 0; left: 0; right: 0;
-    padding: 22px 28px 14px;
+    padding: calc(22px + var(--safe-top)) calc(28px + var(--safe-right)) 14px calc(28px + var(--safe-left));
     z-index: 30;
     background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
     pointer-events: auto;
@@ -241,8 +248,8 @@
 
   #timer {
     position: fixed;
-    top: 18px;
-    right: 22px;
+    top: calc(18px + var(--safe-top));
+    right: calc(22px + var(--safe-right));
     font-family: 'Bungee', sans-serif;
     font-size: 42px;
     color: var(--gold);
@@ -258,11 +265,11 @@
 
   #fighter-tags {
     position: fixed;
-    bottom: 24px;
+    bottom: calc(24px + var(--safe-bottom));
     left: 0; right: 0;
     display: flex;
     justify-content: space-between;
-    padding: 0 36px;
+    padding: 0 calc(36px + var(--safe-right)) 0 calc(36px + var(--safe-left));
     z-index: 20;
     pointer-events: none;
     opacity: 0;
@@ -428,36 +435,42 @@
 
   /* Mobile: single-column buttons, stacked controls, tighter layout */
   @media (max-width: 760px) {
-    #hud { padding: 14px 12px 8px; }
-    #title { font-size: clamp(26px, 7vw, 42px); }
-    #title small { font-size: 0.32em; letter-spacing: 0.3em; }
+    #hud { padding: calc(10px + var(--safe-top)) 10px 6px; }
+    #title { font-size: clamp(24px, 6.5vw, 38px); line-height: 0.95; }
+    #title small { font-size: 0.3em; letter-spacing: 0.28em; margin-top: 2px; }
     #matchmake {
       flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
+      gap: 6px;
+      margin-top: 8px;
     }
-    .mm-label { font-size: 13px; padding: 4px 10px; }
-    .vs-pill { font-size: 12px; padding: 4px 12px; }
+    .mm-label { font-size: 12px; padding: 3px 8px; letter-spacing: 0.08em; }
+    .vs-pill { font-size: 11px; padding: 3px 10px; }
     .dropdown { width: 100%; min-width: 0; max-width: 92vw; }
-    .dropdown-trigger { font-size: 22px; padding: 12px 38px 12px 16px; }
-    .dropdown-list li { padding: 14px 16px; font-size: 20px; }
-    #ringbell { width: 100%; max-width: 92vw; justify-content: center; padding: 14px 18px; font-size: 22px; }
-    #ringbell .bell-svg { width: 32px; height: 32px; }
-    #timer { font-size: 32px; top: 12px; right: 12px; padding: 2px 12px; }
-    #fighter-tags { padding: 0 10px; bottom: 14px; }
-    .fighter-tag { font-size: 13px; padding: 6px 10px; max-width: 46vw; }
+    .dropdown-trigger { font-size: 20px; padding: 11px 38px 11px 14px; min-height: 44px; }
+    .dropdown-list { max-height: 48vh; }
+    .dropdown-list li { padding: 13px 14px; font-size: 19px; }
+    #ringbell { width: 100%; max-width: 92vw; justify-content: center; padding: 12px 16px; font-size: 20px; min-height: 48px; }
+    #ringbell .bell-svg { width: 28px; height: 28px; }
+    #timer { font-size: 28px; padding: 2px 10px; }
+    #fighter-tags { padding: 0 10px; }
+    .fighter-tag { font-size: 12px; padding: 5px 8px; max-width: 44vw; border-width: 2px; }
+    .fighter-tag.left  { border-left-width: 8px; }
+    .fighter-tag.right { border-right-width: 8px; }
     .fighter-tag .corner { font-size: 0.5em; letter-spacing: 0.18em; }
-    #notecard { padding: 24px 22px 28px; width: 94vw; }
-    #notecard h2 { font-size: 18px; }
-    #notecard .winner-line { font-size: clamp(20px, 5.5vw, 28px); }
-    #notecard .move-line { font-size: 14px; }
-    #notecard .quip { font-size: 16px; line-height: 1.4; }
-    #notecard .fineprint { font-size: 9px; }
-    #share-row { gap: 14px; margin-top: 18px; }
+    #notecard { padding: 22px 20px 24px; width: 92vw; max-height: 84vh; overflow-y: auto; }
+    #notecard h2 { font-size: 16px; padding-right: 44px; }
+    #notecard .winner-line { font-size: clamp(20px, 5.5vw, 28px); margin-bottom: 12px; }
+    #notecard .move-line { font-size: 13px; margin-bottom: 10px; }
+    #notecard .quip { font-size: 15px; line-height: 1.4; padding-top: 10px; }
+    #notecard .fineprint { font-size: 9px; margin-top: 12px; }
+    #nc-close { top: 8px; right: 8px; width: 32px; height: 32px; }
+    #nc-close svg { width: 16px; height: 16px; }
+    #share-row { gap: 12px; margin-top: 16px; }
     .share-btn { width: 48px; height: 48px; }
     .share-btn svg { width: 24px; height: 24px; }
     .credit { display: none; }
-    #replay { font-size: 14px; padding: 8px 16px; bottom: 14px; }
+    #replay { font-size: 14px; padding: 8px 16px; }
+    #round-info { font-size: clamp(70px, 22vw, 140px); }
   }
   @media (max-width: 380px) {
     #share-row { gap: 10px; }
@@ -472,7 +485,7 @@
   canvas#stage { touch-action: none; }
   #replay {
     position: fixed;
-    bottom: 38px;
+    bottom: calc(38px + var(--safe-bottom));
     left: 50%;
     transform: translateX(-50%);
     z-index: 50;
@@ -879,10 +892,16 @@ M('Atheism', 'Techno-Utopiaism', 'Techno-Utopiaism',
    THREE.JS SCENE
    ============================================================ */
 const canvas = document.getElementById('stage');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// Device tier detection — mobile / small screens get lighter rendering
+const IS_MOBILE_UA = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const IS_LOW_END = IS_MOBILE_UA || window.innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+
+const renderer = new THREE.WebGLRenderer({
+  canvas, antialias: !IS_LOW_END, preserveDrawingBuffer: true, powerPreference: 'high-performance',
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_LOW_END ? 1.5 : 2));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = IS_LOW_END ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
@@ -916,7 +935,8 @@ const spot = new THREE.SpotLight(0xfff2c8, 4.5, 40, Math.PI / 4.5, 0.45, 1);
 spot.position.set(0, 14, 2);
 spot.target.position.set(0, 0, 0);
 spot.castShadow = true;
-spot.shadow.mapSize.set(1024, 1024);
+const SHADOW_MAP = IS_LOW_END ? 512 : 1024;
+spot.shadow.mapSize.set(SHADOW_MAP, SHADOW_MAP);
 spot.shadow.camera.near = 1;
 spot.shadow.camera.far = 30;
 scene.add(spot);
@@ -1549,12 +1569,14 @@ function triggerBellSwing(strength = 1) {
 /* ----- Audience ----- */
 function buildAudience() {
   const audience = new THREE.Group();
-  const headGeo = new THREE.SphereGeometry(0.22, 8, 6);
+  // Lighter geometry + fewer rings on mobile keeps the frame rate up
+  const headGeo = new THREE.SphereGeometry(0.22, IS_LOW_END ? 6 : 8, IS_LOW_END ? 5 : 6);
   const palette = [0xa05a3a, 0x8b6e4e, 0xd9b58a, 0x6a4a35, 0xf2cfa6, 0x4a3525];
+  const ringCount = IS_LOW_END ? 3 : 5;
   // ring of seats
-  for (let ring = 0; ring < 5; ring++) {
+  for (let ring = 0; ring < ringCount; ring++) {
     const radius = 8 + ring * 1.4;
-    const count = 24 + ring * 8;
+    const count = IS_LOW_END ? (16 + ring * 6) : (24 + ring * 8);
     const y = -0.4 + ring * 0.35;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 + ring * 0.13;
@@ -2263,7 +2285,12 @@ function buildNameLabel(text, accentCss) {
   tex.minFilter = THREE.LinearFilter;
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(4.2, 1.05, 1);
+  // Bigger banners on mobile portrait so the names stay readable when the
+  // camera is pulled back and the fighters look smaller in the frame.
+  const isPortrait = window.innerWidth < window.innerHeight;
+  const isNarrow = window.innerWidth < 700;
+  const w = isPortrait ? (isNarrow ? 5.6 : 4.8) : 4.2;
+  sprite.scale.set(w, w * 0.25, 1);
   sprite.renderOrder = 999;
   return sprite;
 }
