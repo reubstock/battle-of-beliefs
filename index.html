@@ -4125,8 +4125,13 @@ function playBeamCharge() {
    ============================================================ */
 function animate() {
   requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
+  // IMPORTANT: getDelta MUST be called before getElapsedTime. Three.js's
+  // getElapsedTime() internally calls getDelta(), which sets oldTime to "now".
+  // If we called getElapsedTime first, the subsequent getDelta() would return
+  // ~0 because oldTime was just updated. That caused per-frame state timers
+  // (KO fall, charge, flash, beam flight) to never accumulate.
   const dt = Math.min(0.05, clock.getDelta());
+  const t = clock.elapsedTime;
 
   // Update audience sway
   audience.children.forEach(c => {
