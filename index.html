@@ -681,7 +681,7 @@ const FIGHTERS = {
   },
   'Scientology': {
     robe: 0x202542, accent: 0xc0c4d6, shorts: 0x202542, skin: 0xf2cfa6,
-    head: 'slick', emblem: 'emeter', facial: null,
+    head: 'slickShades', emblem: 'emeter', facial: null,
   },
   'UFO-ology': {
     robe: 0xcfcfd6, accent: 0x6affd6, shorts: 0x444448, skin: 0xf2cfa6,
@@ -1638,214 +1638,501 @@ function buildHeadProp(kind, color, accent) {
   const g = new THREE.Group();
   switch (kind) {
     case 'mitre': {
-      // tall white pointed hat
+      // Tall papal mitre with peaked front/back, gold band, big gold cross,
+      // and lappets (ribbons) hanging down the back
+      const hatH = 1.05; // much taller than before
       const hat = new THREE.Mesh(
-        new THREE.ConeGeometry(0.32, 0.85, 4),
-        new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+        new THREE.ConeGeometry(0.36, hatH, 4),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.78 })
       );
-      hat.rotation.y = Math.PI / 4;
-      hat.position.y = 0.42;
+      hat.rotation.y = 0; // square base, peaked front-to-back
+      hat.position.y = hatH / 2 + 0.03;
       hat.castShadow = true;
       g.add(hat);
-      // gold band
+      // Cleft suggestion (slight tilt forward of front side)
+      hat.scale.set(1.0, 1.0, 0.55); // squashed thin in z to make it peak front/back
+      // Gold band at base
       const band = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.34, 0.34, 0.08, 16),
-        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.4, metalness: 0.6 })
+        new THREE.CylinderGeometry(0.38, 0.38, 0.1, 24),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.32, metalness: 0.75 })
       );
-      band.position.y = 0.06;
+      band.position.y = 0.05;
       g.add(band);
-      // cross on top
-      const c1 = box(0.04, 0.18, 0.04, accent, { metal: 0.6 });
-      c1.position.y = 0.95;
-      g.add(c1);
-      const c2 = box(0.12, 0.04, 0.04, accent, { metal: 0.6 });
-      c2.position.y = 0.92;
-      g.add(c2);
+      // Gold front cross
+      const cv = box(0.05, 0.28, 0.03, accent, { metal: 0.7, rough: 0.3 });
+      cv.position.set(0, 0.45, 0.21);
+      g.add(cv);
+      const ch = box(0.18, 0.05, 0.03, accent, { metal: 0.7, rough: 0.3 });
+      ch.position.set(0, 0.5, 0.21);
+      g.add(ch);
+      // Cross at very top of the mitre
+      const topV = box(0.04, 0.16, 0.04, accent, { metal: 0.7 });
+      topV.position.y = hatH + 0.13;
+      g.add(topV);
+      const topH = box(0.11, 0.04, 0.04, accent, { metal: 0.7 });
+      topH.position.y = hatH + 0.1;
+      g.add(topH);
+      // Lappets — white ribbons hanging from back of mitre
+      const lapL = box(0.08, 0.55, 0.025, color);
+      lapL.position.set(-0.1, -0.05, -0.18);
+      g.add(lapL);
+      const lapR = box(0.08, 0.55, 0.025, color);
+      lapR.position.set(0.1, -0.05, -0.18);
+      g.add(lapR);
+      const lapTipL = box(0.09, 0.04, 0.03, accent, { metal: 0.6 });
+      lapTipL.position.set(-0.1, -0.34, -0.18);
+      g.add(lapTipL);
+      const lapTipR = box(0.09, 0.04, 0.03, accent, { metal: 0.6 });
+      lapTipR.position.set(0.1, -0.34, -0.18);
+      g.add(lapTipR);
       break;
     }
     case 'tabs': {
-      // Geneva preaching tabs - small white rectangles at neck, no hat (just hair)
-      const hair = box(0.5, 0.18, 0.42, 0x1a0e0e, { rough: 0.95 });
-      hair.position.y = 0.05;
+      // Preacher: tidy parted hair, black flat-brim hat optional, plus
+      // pronounced Geneva tabs near the throat
+      const hat = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.34, 0.34, 0.18, 24),
+        new THREE.MeshStandardMaterial({ color: 0x101010, roughness: 0.85 })
+      );
+      hat.position.y = 0.22;
+      g.add(hat);
+      const brim = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.46, 0.46, 0.04, 24),
+        new THREE.MeshStandardMaterial({ color: 0x101010, roughness: 0.85 })
+      );
+      brim.position.y = 0.12;
+      g.add(brim);
+      // Hair peeking from under hat
+      const hair = box(0.5, 0.1, 0.42, 0x2a160a, { rough: 0.95 });
+      hair.position.y = 0.06;
       g.add(hair);
+      // Side hair tufts
+      const hL = box(0.08, 0.18, 0.16, 0x2a160a, { rough: 1 });
+      hL.position.set(-0.24, -0.05, 0.05);
+      g.add(hL);
+      const hR = box(0.08, 0.18, 0.16, 0x2a160a, { rough: 1 });
+      hR.position.set(0.24, -0.05, 0.05);
+      g.add(hR);
       break;
     }
     case 'blackhat': {
+      // Big round Hasidic shtreimel fur hat — taller, fluffier
+      // Crown of the hat
+      const crown = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.36, 0.36, 0.38, 24),
+        new THREE.MeshStandardMaterial({ color: 0x0a0805, roughness: 0.85 })
+      );
+      crown.position.y = 0.27;
+      g.add(crown);
+      // Fur ring (multiple stacked tori)
+      for (let i = 0; i < 3; i++) {
+        const fur = new THREE.Mesh(
+          new THREE.TorusGeometry(0.4, 0.07, 8, 28),
+          new THREE.MeshStandardMaterial({ color: 0x2a1605, roughness: 1.0 })
+        );
+        fur.rotation.x = Math.PI / 2;
+        fur.position.y = 0.16 + i * 0.08;
+        g.add(fur);
+      }
+      // Brim shadow
       const brim = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.45, 0.45, 0.04, 24),
-        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 })
+        new THREE.CylinderGeometry(0.42, 0.42, 0.04, 24),
+        new THREE.MeshStandardMaterial({ color: 0x0a0805, roughness: 0.9 })
       );
       brim.position.y = 0.08;
       g.add(brim);
-      const crown = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.3, 0.3, 0.3, 16),
-        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.85 })
+      // Hatband
+      const hatband = new THREE.Mesh(
+        new THREE.TorusGeometry(0.37, 0.025, 8, 24),
+        new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 })
       );
-      crown.position.y = 0.25;
-      g.add(crown);
-      // payot (sideburn curls)
-      const payL = cyl(0.04, 0.04, 0.32, 0x1a1410, { rough: 1 });
-      payL.position.set(-0.28, -0.18, 0.05);
-      g.add(payL);
-      const payR = cyl(0.04, 0.04, 0.32, 0x1a1410, { rough: 1 });
-      payR.position.set(0.28, -0.18, 0.05);
-      g.add(payR);
+      hatband.rotation.x = Math.PI / 2;
+      hatband.position.y = 0.46;
+      g.add(hatband);
+      // LONG peyot — multiple curly sausage cylinders down each side
+      for (let s of [-1, 1]) {
+        for (let i = 0; i < 4; i++) {
+          const curl = sphere(0.055, 0x1a1208, { rough: 1 });
+          curl.position.set(s * 0.27, -0.08 - i * 0.1, 0.06 + (i % 2) * 0.03);
+          g.add(curl);
+        }
+      }
       break;
     }
     case 'turban': {
-      const t = new THREE.Mesh(
-        new THREE.TorusGeometry(0.3, 0.16, 12, 24),
-        new THREE.MeshStandardMaterial({ color: color, roughness: 0.85 })
+      // Multi-layered Imam turban with green band
+      const layers = 5;
+      for (let i = 0; i < layers; i++) {
+        const r = 0.32 + Math.sin(i * 0.5) * 0.01;
+        const t = new THREE.Mesh(
+          new THREE.TorusGeometry(r, 0.075, 10, 28),
+          new THREE.MeshStandardMaterial({ color: color, roughness: 0.78 })
+        );
+        t.rotation.x = Math.PI / 2 + 0.03 * i;
+        t.position.y = 0.05 + i * 0.13;
+        t.rotation.y = i * 0.4;
+        g.add(t);
+      }
+      // Green band on lower wrap
+      const band = new THREE.Mesh(
+        new THREE.TorusGeometry(0.33, 0.04, 8, 28),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.55, metalness: 0.15 })
       );
-      t.rotation.x = Math.PI / 2;
-      t.position.y = 0.1;
-      g.add(t);
-      const top = sphere(0.28, color, { rough: 0.85 });
-      top.position.y = 0.22;
+      band.rotation.x = Math.PI / 2;
+      band.position.y = 0.18;
+      g.add(band);
+      // Crown of the head (peeks through the wraps)
+      const top = sphere(0.22, color, { rough: 0.78 });
+      top.position.y = 0.72;
+      top.scale.y = 0.6;
       g.add(top);
-      const stripe = new THREE.Mesh(
-        new THREE.TorusGeometry(0.31, 0.04, 8, 24),
-        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.6 })
-      );
-      stripe.rotation.x = Math.PI / 2;
-      stripe.position.y = 0.16;
-      g.add(stripe);
+      // Tail of the turban (small flap at the back)
+      const tail = box(0.12, 0.32, 0.05, color);
+      tail.position.set(0, 0.05, -0.32);
+      g.add(tail);
       break;
     }
     case 'mukhpatti': {
-      // Jain monk: bald, mouth cloth (added at face level)
-      const cloth = box(0.42, 0.16, 0.04, color);
-      cloth.position.set(0, -0.18, 0.26);
+      // Bald Jain monk: prominent white mouth cloth + visible tilak
+      // Tilak (vertical mark on bald scalp)
+      const tilak = box(0.04, 0.22, 0.02, 0xc8102e);
+      tilak.position.set(0, 0.05, 0.21);
+      g.add(tilak);
+      // Big mouth cloth covering nose+mouth
+      const cloth = box(0.46, 0.22, 0.05, color);
+      cloth.position.set(0, -0.16, 0.27);
       g.add(cloth);
-      // tie strings
-      const t1 = cyl(0.01, 0.01, 0.45, color);
-      t1.position.set(-0.18, -0.05, 0.18);
-      t1.rotation.z = 0.4;
-      g.add(t1);
-      const t2 = cyl(0.01, 0.01, 0.45, color);
-      t2.position.set(0.18, -0.05, 0.18);
-      t2.rotation.z = -0.4;
-      g.add(t2);
+      // Subtle pleats / cross-stitches
+      const seam = box(0.42, 0.01, 0.06, 0xdddddd);
+      seam.position.set(0, -0.16, 0.295);
+      g.add(seam);
+      // Tie strings curving around the head
+      for (let s of [-1, 1]) {
+        const tie = cyl(0.012, 0.012, 0.6, color);
+        tie.position.set(s * 0.21, -0.04, 0.16);
+        tie.rotation.z = s * 0.5;
+        tie.rotation.y = s * 0.4;
+        g.add(tie);
+      }
+      // A simple ear suggestion (since the head is bald)
+      for (let s of [-1, 1]) {
+        const ear = sphere(0.06, 0xd9b58a, { rough: 0.9 });
+        ear.position.set(s * 0.26, -0.05, 0);
+        ear.scale.set(0.6, 1, 0.7);
+        g.add(ear);
+      }
       break;
     }
     case 'crown': {
+      // Tall Hindu deity crown with a PEACOCK FEATHER and a tilak
+      // Wider, taller base
       const base = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.32, 0.32, 0.16, 16),
-        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.3, metalness: 0.7 })
+        new THREE.CylinderGeometry(0.34, 0.36, 0.22, 24),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.25, metalness: 0.85 })
       );
-      base.position.y = 0.12;
+      base.position.y = 0.15;
       g.add(base);
-      // 5 spikes
-      for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2;
+      // Decorative band
+      const decoBand = new THREE.Mesh(
+        new THREE.TorusGeometry(0.35, 0.03, 8, 24),
+        new THREE.MeshStandardMaterial({ color: 0x7a4a10, roughness: 0.4, metalness: 0.7 })
+      );
+      decoBand.rotation.x = Math.PI / 2;
+      decoBand.position.y = 0.07;
+      g.add(decoBand);
+      // 7 ornate spikes around the crown
+      for (let i = 0; i < 7; i++) {
+        const a = (i / 7) * Math.PI * 2;
         const spk = new THREE.Mesh(
-          new THREE.ConeGeometry(0.06, 0.22, 6),
-          new THREE.MeshStandardMaterial({ color: accent, roughness: 0.3, metalness: 0.7 })
+          new THREE.ConeGeometry(0.05, 0.28, 6),
+          new THREE.MeshStandardMaterial({ color: accent, roughness: 0.25, metalness: 0.85 })
         );
-        spk.position.set(Math.cos(a) * 0.28, 0.28, Math.sin(a) * 0.28);
+        spk.position.set(Math.cos(a) * 0.3, 0.36, Math.sin(a) * 0.3);
         g.add(spk);
+        // Tiny jewel at base of each spike
+        const j = sphere(0.025, [0xc8102e, 0x2bcc44, 0x2b6cb0, 0xf0c958][i % 4], { metal: 0.6, rough: 0.2 });
+        j.position.set(Math.cos(a) * 0.3, 0.22, Math.sin(a) * 0.3);
+        g.add(j);
       }
-      // jewel
-      const j = sphere(0.07, 0xff3344, { rough: 0.2, metal: 0.4 });
-      j.position.set(0, 0.14, 0.32);
-      g.add(j);
-      // tilak (forehead mark)
-      const tilak = box(0.05, 0.08, 0.02, 0xc8102e);
-      tilak.position.set(0, -0.05, 0.27);
-      g.add(tilak);
+      // Big central jewel on front
+      const jewel = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.07),
+        new THREE.MeshStandardMaterial({ color: 0xc8102e, roughness: 0.18, metalness: 0.5 })
+      );
+      jewel.position.set(0, 0.16, 0.34);
+      g.add(jewel);
+      // PEACOCK FEATHER sticking up from the back of the crown
+      const stem = cyl(0.015, 0.015, 0.6, 0x9a7820);
+      stem.position.set(0, 0.65, -0.05);
+      stem.rotation.x = -0.2;
+      g.add(stem);
+      // Feather "eye" — concentric ovals (blue, green, gold)
+      const eyeBlue = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 12, 10),
+        new THREE.MeshStandardMaterial({ color: 0x1a3a8a, roughness: 0.4 })
+      );
+      eyeBlue.scale.set(0.6, 1, 0.15);
+      eyeBlue.position.set(0, 0.95, 0.0);
+      eyeBlue.rotation.x = -0.2;
+      g.add(eyeBlue);
+      const eyeGreen = new THREE.Mesh(
+        new THREE.SphereGeometry(0.09, 12, 10),
+        new THREE.MeshStandardMaterial({ color: 0x2bcc44, roughness: 0.4 })
+      );
+      eyeGreen.scale.set(0.55, 1, 0.15);
+      eyeGreen.position.set(0, 0.97, 0.015);
+      eyeGreen.rotation.x = -0.2;
+      g.add(eyeGreen);
+      const eyeGold = new THREE.Mesh(
+        new THREE.SphereGeometry(0.055, 10, 8),
+        new THREE.MeshStandardMaterial({ color: 0xf0c958, roughness: 0.3, metalness: 0.5 })
+      );
+      eyeGold.scale.set(0.5, 1, 0.15);
+      eyeGold.position.set(0, 0.98, 0.03);
+      eyeGold.rotation.x = -0.2;
+      g.add(eyeGold);
+      // Feather fronds (small green fans below the eye)
+      for (let i = -2; i <= 2; i++) {
+        const frond = box(0.02, 0.18, 0.005, 0x2b8c44, { rough: 0.8 });
+        frond.position.set(i * 0.02, 0.85 + i * 0.005, -0.02);
+        frond.rotation.z = i * 0.18;
+        frond.rotation.x = -0.2;
+        g.add(frond);
+      }
+      // V-shaped tilak on forehead (vertical line with red dot)
+      const tilakV = box(0.04, 0.16, 0.02, 0xfefcf5);
+      tilakV.position.set(0, -0.08, 0.27);
+      g.add(tilakV);
+      const tilakDot = sphere(0.025, 0xc8102e);
+      tilakDot.position.set(0, 0.0, 0.275);
+      g.add(tilakDot);
       break;
     }
     case 'topknot': {
-      // bun on top + hair around
-      const hair = box(0.48, 0.18, 0.4, 0xd6d6c8, { rough: 1 });
-      hair.position.y = 0.04;
-      g.add(hair);
-      const bun = sphere(0.14, 0xd6d6c8, { rough: 1 });
-      bun.position.y = 0.22;
+      // Taoist sage: white flowing hair with bun and hairpin, long mustache hint
+      // Long flowing hair down sides and back
+      const hairBack = box(0.5, 0.5, 0.18, 0xe8e6dc, { rough: 1 });
+      hairBack.position.set(0, -0.05, -0.15);
+      g.add(hairBack);
+      const hairSideL = box(0.12, 0.42, 0.36, 0xe8e6dc, { rough: 1 });
+      hairSideL.position.set(-0.28, -0.05, 0);
+      g.add(hairSideL);
+      const hairSideR = box(0.12, 0.42, 0.36, 0xe8e6dc, { rough: 1 });
+      hairSideR.position.set(0.28, -0.05, 0);
+      g.add(hairSideR);
+      // Top of head
+      const hairTop = box(0.48, 0.16, 0.42, 0xe8e6dc, { rough: 1 });
+      hairTop.position.y = 0.1;
+      g.add(hairTop);
+      // Bun
+      const bun = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.13, 0.13, 0.16, 16),
+        new THREE.MeshStandardMaterial({ color: 0xd6d0c0, roughness: 0.95 })
+      );
+      bun.position.y = 0.28;
       g.add(bun);
-      const stick = cyl(0.02, 0.02, 0.18, 0x8b5a2b);
-      stick.position.y = 0.24;
-      stick.rotation.z = Math.PI / 2;
-      g.add(stick);
+      // Hairpin (jade rod through bun)
+      const pin = cyl(0.015, 0.015, 0.32, 0x2c8c5a, { metal: 0.4, rough: 0.4 });
+      pin.position.y = 0.3;
+      pin.rotation.z = Math.PI / 2;
+      g.add(pin);
+      const pinCap = sphere(0.025, 0xf0c958, { metal: 0.7, rough: 0.3 });
+      pinCap.position.set(0.18, 0.3, 0);
+      g.add(pinCap);
+      // Headband
+      const hb = new THREE.Mesh(
+        new THREE.TorusGeometry(0.27, 0.018, 6, 20),
+        new THREE.MeshStandardMaterial({ color: 0x6a4810, roughness: 0.7 })
+      );
+      hb.rotation.x = Math.PI / 2;
+      hb.position.y = 0.12;
+      g.add(hb);
       break;
     }
     case 'slick': {
-      const hair = box(0.46, 0.14, 0.4, 0x100a05, { rough: 0.4, metal: 0.2 });
-      hair.position.y = 0.06;
+      // Mormon missionary: tidy black hair with a clean side part
+      const hair = box(0.48, 0.18, 0.42, 0x0a0604, { rough: 0.45, metal: 0.15 });
+      hair.position.y = 0.07;
       g.add(hair);
-      // a clean part
-      const part = box(0.42, 0.02, 0.06, 0xf2cfa6);
-      part.position.set(0.06, 0.13, 0);
-      part.rotation.y = -0.1;
+      // Side part (skin showing through)
+      const part = box(0.04, 0.04, 0.3, 0xd9b58a);
+      part.position.set(-0.12, 0.16, 0);
       g.add(part);
+      // Forehead fringe (small swept piece)
+      const fringe = box(0.18, 0.06, 0.06, 0x0a0604, { rough: 0.5 });
+      fringe.position.set(0.05, 0.1, 0.22);
+      fringe.rotation.z = -0.15;
+      g.add(fringe);
+      // Earlobe suggestions
+      for (let s of [-1, 1]) {
+        const ear = sphere(0.05, 0xd9b58a, { rough: 0.9 });
+        ear.position.set(s * 0.26, -0.04, 0);
+        ear.scale.set(0.6, 1.1, 0.7);
+        g.add(ear);
+      }
+      break;
+    }
+    case 'slickShades': {
+      // Scientology operative: slicked-back hair plus aviator sunglasses
+      const hair = box(0.5, 0.16, 0.4, 0x080604, { rough: 0.3, metal: 0.35 });
+      hair.position.y = 0.08;
+      g.add(hair);
+      // Back-flowing hair shape
+      const hairBack = box(0.46, 0.1, 0.2, 0x080604, { rough: 0.3, metal: 0.35 });
+      hairBack.position.set(0, 0.04, -0.16);
+      g.add(hairBack);
+      // Aviator frames
+      const lensL = new THREE.Mesh(
+        new THREE.SphereGeometry(0.09, 16, 12),
+        new THREE.MeshStandardMaterial({ color: 0x080a14, roughness: 0.2, metalness: 0.4 })
+      );
+      lensL.scale.set(1, 0.85, 0.25);
+      lensL.position.set(-0.12, -0.04, 0.24);
+      g.add(lensL);
+      const lensR = lensL.clone();
+      lensR.position.set(0.12, -0.04, 0.24);
+      g.add(lensR);
+      // Frame bridge
+      const bridge = box(0.1, 0.025, 0.03, 0x6a6a72, { metal: 0.6 });
+      bridge.position.set(0, -0.04, 0.25);
+      g.add(bridge);
+      // Frame arms (over ears)
+      for (let s of [-1, 1]) {
+        const arm = box(0.18, 0.02, 0.02, 0x6a6a72, { metal: 0.6 });
+        arm.position.set(s * 0.23, -0.04, 0.08);
+        arm.rotation.y = s * 0.3;
+        g.add(arm);
+      }
       break;
     }
     case 'tinfoil': {
-      // crumpled silver hat
-      const h = sphere(0.34, 0xcccccc, { rough: 0.2, metal: 0.9 });
-      h.scale.set(1, 0.7, 1);
-      h.position.y = 0.12;
+      // Bigger, crinklier tinfoil hat with MULTIPLE antennae + mylar streamers
+      const h = sphere(0.4, 0xcccccc, { rough: 0.2, metal: 0.9 });
+      h.scale.set(1.1, 0.85, 1.1);
+      h.position.y = 0.18;
       g.add(h);
-      // little crinkles
-      for (let i = 0; i < 6; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const r = 0.28;
-        const dot = sphere(0.05, 0xa8a8a8, { metal: 0.9, rough: 0.3 });
-        dot.position.set(Math.cos(a) * r, 0.16 + Math.random() * 0.08, Math.sin(a) * r);
+      // Crumples
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2 + Math.random();
+        const r = 0.3 + Math.random() * 0.04;
+        const dot = sphere(0.06 + Math.random() * 0.03, [0xa8a8a8, 0xc8c8c8, 0xdddddd][i % 3], { metal: 0.9, rough: 0.3 });
+        dot.position.set(Math.cos(a) * r, 0.2 + Math.random() * 0.18, Math.sin(a) * r);
         g.add(dot);
       }
-      // antenna
-      const ant = cyl(0.02, 0.02, 0.5, 0x888888, { metal: 0.9, rough: 0.2 });
-      ant.position.set(0.18, 0.42, 0);
-      ant.rotation.z = -0.25;
-      g.add(ant);
-      const ball = sphere(0.05, accent, { metal: 0.5, rough: 0.3 });
-      ball.position.set(0.3, 0.65, 0);
-      g.add(ball);
+      // Pointed peak on top
+      const peak = new THREE.Mesh(
+        new THREE.ConeGeometry(0.12, 0.22, 6),
+        new THREE.MeshStandardMaterial({ color: 0xb8b8b8, roughness: 0.25, metalness: 0.85 })
+      );
+      peak.position.y = 0.55;
+      g.add(peak);
+      // Three antennae
+      const antennaeOffsets = [[-0.22, 0.42, 0.05, -0.3, 0.2], [0.22, 0.42, 0.05, 0.3, 0.2], [0, 0.5, -0.18, 0, -0.2]];
+      antennaeOffsets.forEach(([x, y, z, rz, rx]) => {
+        const ant = cyl(0.018, 0.018, 0.55, 0x888888, { metal: 0.9, rough: 0.2 });
+        ant.position.set(x, y, z);
+        ant.rotation.z = rz;
+        ant.rotation.x = rx;
+        g.add(ant);
+        const tip = sphere(0.055, accent, { metal: 0.55, rough: 0.25 });
+        tip.position.set(x + Math.sin(rz) * 0.3, y + 0.3, z + Math.sin(rx) * 0.3);
+        g.add(tip);
+      });
+      // Mylar streamers (small flaps)
+      for (let i = 0; i < 3; i++) {
+        const streamer = box(0.06, 0.18, 0.005, 0xdadada, { metal: 0.8, rough: 0.3 });
+        streamer.position.set((i - 1) * 0.18, -0.08, 0.32);
+        streamer.rotation.z = (i - 1) * 0.3;
+        g.add(streamer);
+      }
       break;
     }
     case 'einstein': {
-      const hairColor = 0xeeeeee;
-      // wild puff
-      for (let i = 0; i < 14; i++) {
-        const tuft = sphere(0.11 + Math.random() * 0.05, hairColor, { rough: 1 });
-        const a = (i / 14) * Math.PI * 2;
-        tuft.position.set(Math.cos(a) * 0.24, 0.14 + Math.random() * 0.1, Math.sin(a) * 0.24);
+      const hairColor = 0xf2f2ee;
+      // Huge wild halo of hair
+      for (let i = 0; i < 22; i++) {
+        const r = 0.13 + Math.random() * 0.07;
+        const tuft = sphere(r, hairColor, { rough: 1 });
+        const a = (i / 22) * Math.PI * 2;
+        const radius = 0.27 + Math.random() * 0.06;
+        tuft.position.set(Math.cos(a) * radius, 0.12 + Math.random() * 0.18, Math.sin(a) * radius);
         g.add(tuft);
       }
-      const top = sphere(0.18, hairColor, { rough: 1 });
-      top.position.y = 0.22;
-      g.add(top);
-      // goggles
-      const lensL = sphere(0.07, 0x88c8ff, { metal: 0.4, rough: 0.2 });
-      lensL.position.set(-0.11, -0.05, 0.24);
-      g.add(lensL);
-      const lensR = sphere(0.07, 0x88c8ff, { metal: 0.4, rough: 0.2 });
-      lensR.position.set(0.11, -0.05, 0.24);
-      g.add(lensR);
-      const strap = box(0.5, 0.04, 0.04, 0x222222);
-      strap.position.set(0, -0.05, 0.18);
+      // Top fluff
+      for (let i = 0; i < 6; i++) {
+        const t = sphere(0.13 + Math.random() * 0.06, hairColor, { rough: 1 });
+        t.position.set((Math.random() - 0.5) * 0.3, 0.28 + Math.random() * 0.1, (Math.random() - 0.5) * 0.3);
+        g.add(t);
+      }
+      // Bushy white mustache
+      const stache = box(0.32, 0.07, 0.1, hairColor, { rough: 1 });
+      stache.position.set(0, -0.17, 0.25);
+      g.add(stache);
+      // Big black-rimmed safety goggles
+      for (let s of [-1, 1]) {
+        const frame = new THREE.Mesh(
+          new THREE.TorusGeometry(0.085, 0.018, 8, 16),
+          new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 })
+        );
+        frame.position.set(s * 0.11, -0.04, 0.25);
+        g.add(frame);
+        const lens = new THREE.Mesh(
+          new THREE.CircleGeometry(0.075, 16),
+          new THREE.MeshStandardMaterial({ color: 0xc8e8ff, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.85 })
+        );
+        lens.position.set(s * 0.11, -0.04, 0.255);
+        g.add(lens);
+      }
+      // Strap
+      const strap = box(0.6, 0.05, 0.04, 0x222222);
+      strap.position.set(0, -0.04, 0.05);
       g.add(strap);
       break;
     }
     case 'bald': {
-      // shiny bald head (no hat)
+      // Bald — just the glabrous head suggestion; the face provides glasses + beard
+      // Add a subtle 5-o'clock-shadow / hairline shadow
+      const shade = box(0.42, 0.03, 0.42, 0x6a4a2a, { rough: 1 });
+      shade.position.y = 0.04;
+      g.add(shade);
       break;
     }
     case 'vr': {
-      const hs = box(0.5, 0.2, 0.3, 0x111122, { rough: 0.3, metal: 0.4 });
+      // Big VR headset with glowing cyan strip and a top/back strap
+      const hs = box(0.56, 0.24, 0.34, 0x0a0a16, { rough: 0.3, metal: 0.4 });
       hs.position.set(0, -0.02, 0.18);
       g.add(hs);
-      const lens = box(0.4, 0.14, 0.02, accent, { metal: 0.7, rough: 0.15 });
-      lens.position.set(0, -0.02, 0.34);
+      // Big bright lens panel
+      const lens = box(0.46, 0.16, 0.02, accent, { metal: 0.85, rough: 0.1 });
+      lens.position.set(0, -0.02, 0.36);
       g.add(lens);
-      const strap = box(0.5, 0.06, 0.5, 0x222244, { rough: 0.6 });
-      strap.position.set(0, -0.02, 0);
-      g.add(strap);
-      // glowy LED dot
-      const led = sphere(0.025, accent, { metal: 0.5 });
-      led.position.set(0.16, 0.05, 0.36);
+      // Glowing emissive-ish strip on the front
+      const strip = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.5, 0.04),
+        new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.9, roughness: 0.3 })
+      );
+      strip.position.set(0, 0.08, 0.371);
+      g.add(strip);
+      // Side foam
+      for (let s of [-1, 1]) {
+        const foam = box(0.04, 0.18, 0.32, 0x333344, { rough: 0.9 });
+        foam.position.set(s * 0.3, -0.02, 0.16);
+        g.add(foam);
+      }
+      // Head straps
+      const strapTop = box(0.06, 0.06, 0.4, 0x222244, { rough: 0.6 });
+      strapTop.position.set(0, 0.18, -0.05);
+      g.add(strapTop);
+      const strapBack = box(0.56, 0.06, 0.06, 0x222244, { rough: 0.6 });
+      strapBack.position.set(0, -0.02, -0.22);
+      g.add(strapBack);
+      // LED dots
+      const led = sphere(0.03, accent, { metal: 0.5 });
+      led.position.set(0.2, 0.07, 0.38);
       g.add(led);
+      const led2 = sphere(0.025, 0xff5050, { metal: 0.5 });
+      led2.position.set(-0.22, -0.08, 0.38);
+      g.add(led2);
       break;
     }
   }
@@ -1854,43 +2141,122 @@ function buildHeadProp(kind, color, accent) {
 
 function buildFacial(kind) {
   const g = new THREE.Group();
+  // Shared: a small skin nose for every face — adds a lot of "person" feel
+  const nose = sphere(0.05, 0xd9a880, { rough: 0.85 });
+  nose.position.set(0, -0.04, 0.255);
+  nose.scale.set(0.9, 0.7, 0.9);
+  g.add(nose);
+  // Subtle brow ridges
+  const browL = box(0.13, 0.025, 0.04, 0x3a2410, { rough: 1 });
+  browL.position.set(-0.1, 0.11, 0.235);
+  browL.rotation.z = -0.06;
+  g.add(browL);
+  const browR = box(0.13, 0.025, 0.04, 0x3a2410, { rough: 1 });
+  browR.position.set(0.1, 0.11, 0.235);
+  browR.rotation.z = 0.06;
+  g.add(browR);
+
   switch (kind) {
     case 'fullbeard': {
-      const beard = box(0.44, 0.35, 0.18, 0x1a1410, { rough: 1 });
-      beard.position.set(0, -0.22, 0.18);
+      // Hasidic-style big bushy beard wraps the jawline and falls below chin
+      const beard = box(0.48, 0.42, 0.22, 0x110a05, { rough: 1 });
+      beard.position.set(0, -0.24, 0.16);
       g.add(beard);
-      break;
-    }
-    case 'shortbeard': {
-      const beard = box(0.42, 0.18, 0.14, 0x1a1410, { rough: 1 });
-      beard.position.set(0, -0.22, 0.2);
-      g.add(beard);
-      break;
-    }
-    case 'longbeard': {
-      const beard = box(0.34, 0.5, 0.14, 0xe8e8e0, { rough: 1 });
-      beard.position.set(0, -0.36, 0.2);
-      g.add(beard);
-      break;
-    }
-    case 'wildhair': {
-      const stache = box(0.3, 0.06, 0.08, 0xeeeeee, { rough: 1 });
-      stache.position.set(0, -0.16, 0.24);
+      // Bushy texture clumps
+      for (let i = 0; i < 8; i++) {
+        const tuft = sphere(0.07 + Math.random() * 0.02, 0x1a0e08, { rough: 1 });
+        const t = (i / 8) * Math.PI - Math.PI / 2;
+        tuft.position.set(Math.cos(t) * 0.21, -0.36 + Math.sin(Math.abs(t)) * -0.05, 0.22 + Math.sin(t) * 0.04);
+        g.add(tuft);
+      }
+      // Mustache
+      const stache = box(0.32, 0.06, 0.1, 0x110a05, { rough: 1 });
+      stache.position.set(0, -0.12, 0.25);
       g.add(stache);
       break;
     }
-    case 'glasses': {
-      const lensL = new THREE.Mesh(
-        new THREE.RingGeometry(0.06, 0.09, 16),
-        new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 })
+    case 'shortbeard': {
+      // Trim Imam beard wrapping jaw + mustache
+      const beard = box(0.44, 0.22, 0.18, 0x1a1208, { rough: 1 });
+      beard.position.set(0, -0.22, 0.19);
+      g.add(beard);
+      // Mustache
+      const stache = box(0.28, 0.05, 0.1, 0x1a1208, { rough: 1 });
+      stache.position.set(0, -0.12, 0.255);
+      g.add(stache);
+      // Sideburn continuation
+      for (let s of [-1, 1]) {
+        const sb = box(0.05, 0.18, 0.06, 0x1a1208, { rough: 1 });
+        sb.position.set(s * 0.22, -0.12, 0.18);
+        g.add(sb);
+      }
+      break;
+    }
+    case 'longbeard': {
+      // Taoist sage beard — long, white, hanging well below the chin
+      const upper = box(0.38, 0.18, 0.14, 0xe8e6dc, { rough: 1 });
+      upper.position.set(0, -0.18, 0.21);
+      g.add(upper);
+      const long = box(0.24, 0.58, 0.14, 0xeeece0, { rough: 1 });
+      long.position.set(0, -0.5, 0.21);
+      g.add(long);
+      // Tapering tail
+      const tail = new THREE.Mesh(
+        new THREE.ConeGeometry(0.1, 0.22, 8),
+        new THREE.MeshStandardMaterial({ color: 0xeeece0, roughness: 1 })
       );
-      lensL.position.set(-0.12, -0.05, 0.26);
-      g.add(lensL);
-      const lensR = lensL.clone();
-      lensR.position.set(0.12, -0.05, 0.26);
-      g.add(lensR);
-      const bridge = box(0.08, 0.02, 0.02, 0x111111);
-      bridge.position.set(0, -0.05, 0.26);
+      tail.position.set(0, -0.88, 0.21);
+      g.add(tail);
+      // Long mustache curling downward
+      const stacheL = cyl(0.018, 0.018, 0.32, 0xeeece0);
+      stacheL.position.set(-0.13, -0.2, 0.24);
+      stacheL.rotation.z = 0.4;
+      g.add(stacheL);
+      const stacheR = cyl(0.018, 0.018, 0.32, 0xeeece0);
+      stacheR.position.set(0.13, -0.2, 0.24);
+      stacheR.rotation.z = -0.4;
+      g.add(stacheR);
+      break;
+    }
+    case 'wildhair': {
+      // Bushy Einstein mustache (separate from the wild hair on the head)
+      const stache = box(0.34, 0.08, 0.12, 0xeeeeee, { rough: 1 });
+      stache.position.set(0, -0.15, 0.25);
+      g.add(stache);
+      // Mustache wings
+      for (let s of [-1, 1]) {
+        const w = box(0.08, 0.07, 0.08, 0xeeeeee, { rough: 1 });
+        w.position.set(s * 0.18, -0.16, 0.24);
+        w.rotation.z = -s * 0.3;
+        g.add(w);
+      }
+      break;
+    }
+    case 'glasses': {
+      // Atheist: black-rimmed glasses + short trimmed beard
+      const beard = box(0.42, 0.18, 0.14, 0x3a2410, { rough: 1 });
+      beard.position.set(0, -0.22, 0.2);
+      g.add(beard);
+      const stache = box(0.24, 0.04, 0.08, 0x3a2410, { rough: 1 });
+      stache.position.set(0, -0.13, 0.255);
+      g.add(stache);
+      // Solid black-rimmed glasses
+      for (let s of [-1, 1]) {
+        const frame = new THREE.Mesh(
+          new THREE.TorusGeometry(0.075, 0.014, 8, 16),
+          new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 })
+        );
+        frame.position.set(s * 0.11, -0.04, 0.255);
+        g.add(frame);
+        const lens = new THREE.Mesh(
+          new THREE.CircleGeometry(0.07, 16),
+          new THREE.MeshStandardMaterial({ color: 0xa0c8f0, roughness: 0.1, transparent: true, opacity: 0.45 })
+        );
+        lens.position.set(s * 0.11, -0.04, 0.258);
+        g.add(lens);
+      }
+      const bridge = box(0.08, 0.018, 0.02, 0x111111);
+      bridge.position.set(0, -0.04, 0.26);
       g.add(bridge);
       break;
     }
@@ -2114,6 +2480,463 @@ function buildEmblem(kind, color) {
   return g;
 }
 
+// Layered outfit pieces (capes, sashes, ties, name tags, etc.) per belief —
+// added on top of the basic torso for clearer identification
+function buildOutfitLayer(belief, def) {
+  const g = new THREE.Group();
+  switch (belief) {
+    case 'Catholicism': {
+      // Red mozzetta (shoulder cape) — short cape that drapes off the shoulders
+      const mozzetta = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.5, 0.36, 16, 1, true, 0, Math.PI * 1.0),
+        new THREE.MeshStandardMaterial({ color: 0xc8102e, roughness: 0.78, side: THREE.DoubleSide })
+      );
+      mozzetta.rotation.y = -Math.PI / 2;
+      mozzetta.position.set(0, 1.7, 0);
+      g.add(mozzetta);
+      // Gold stole — long scarf hanging down chest
+      const stoleL = box(0.07, 0.55, 0.025, 0xf0c958, { metal: 0.4, rough: 0.35 });
+      stoleL.position.set(-0.13, 1.45, 0.22);
+      g.add(stoleL);
+      const stoleR = box(0.07, 0.55, 0.025, 0xf0c958, { metal: 0.4, rough: 0.35 });
+      stoleR.position.set(0.13, 1.45, 0.22);
+      g.add(stoleR);
+      // Pectoral cross hanging from gold chain
+      const chain = cyl(0.008, 0.008, 0.16, 0xf0c958, { metal: 0.7, rough: 0.3 });
+      chain.position.set(0, 1.75, 0.22);
+      g.add(chain);
+      const crossV = box(0.04, 0.16, 0.015, 0xf0c958, { metal: 0.7, rough: 0.25 });
+      crossV.position.set(0, 1.58, 0.23);
+      g.add(crossV);
+      const crossH = box(0.1, 0.04, 0.015, 0xf0c958, { metal: 0.7, rough: 0.25 });
+      crossH.position.set(0, 1.62, 0.23);
+      g.add(crossH);
+      break;
+    }
+    case 'Protestantism': {
+      // White Geneva tabs at neck (two prominent rectangles)
+      const tabL = box(0.07, 0.18, 0.02, 0xfafafa);
+      tabL.position.set(-0.06, 1.82, 0.21);
+      g.add(tabL);
+      const tabR = box(0.07, 0.18, 0.02, 0xfafafa);
+      tabR.position.set(0.06, 1.82, 0.21);
+      g.add(tabR);
+      // Wide preacher's collar
+      const collar = box(0.5, 0.04, 0.4, 0xfafafa);
+      collar.position.y = 1.88;
+      g.add(collar);
+      // Gown overlay extending down to mid-thigh (longer torso piece)
+      const gown = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.32, 0.42, 0.5, 16, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.85, side: THREE.DoubleSide })
+      );
+      gown.position.y = 0.95;
+      g.add(gown);
+      break;
+    }
+    case 'Orthodox Judaism': {
+      // Long black bekishe coat (taller torso overlay)
+      const coat = box(0.66, 1.0, 0.42, 0x0a0a0a, { rough: 0.85 });
+      coat.position.y = 1.3;
+      g.add(coat);
+      // White shirt collar visible at neck
+      const shirt = box(0.32, 0.12, 0.36, 0xfafafa);
+      shirt.position.y = 1.88;
+      g.add(shirt);
+      // Tallit (prayer shawl) — long white drape with blue stripes
+      const tallit = box(0.7, 0.6, 0.05, 0xfafafa);
+      tallit.position.set(0, 1.55, 0.22);
+      g.add(tallit);
+      // Blue stripes
+      for (let i = -1; i <= 1; i += 2) {
+        const stripe = box(0.68, 0.02, 0.055, 0x2b6cb0);
+        stripe.position.set(0, 1.4 + i * 0.18, 0.22);
+        g.add(stripe);
+      }
+      // Tzitzit (fringes hanging from corners)
+      for (let s of [-0.32, 0.32]) {
+        for (let i = 0; i < 4; i++) {
+          const fringe = cyl(0.005, 0.005, 0.18, 0xfafafa);
+          fringe.position.set(s + i * 0.02 - 0.03, 1.18, 0.24);
+          g.add(fringe);
+        }
+      }
+      break;
+    }
+    case 'Islam': {
+      // Long white thobe (extending lower than the basic torso)
+      const thobe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.34, 0.44, 1.0, 16, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.85, side: THREE.DoubleSide })
+      );
+      thobe.position.y = 0.95;
+      g.add(thobe);
+      // Green sash diagonal across chest
+      const sash = box(0.12, 0.7, 0.04, 0x14823a);
+      sash.position.set(0, 1.5, 0.22);
+      sash.rotation.z = -0.4;
+      g.add(sash);
+      // Gold trim on sash edges
+      const sashTrim = box(0.13, 0.72, 0.045, 0xd6a737, { metal: 0.4 });
+      sashTrim.position.set(0, 1.5, 0.215);
+      sashTrim.rotation.z = -0.4;
+      sashTrim.scale.set(0.95, 1, 1);
+      g.add(sashTrim);
+      // Prayer beads hanging from waist
+      const beadString = cyl(0.01, 0.01, 0.32, 0xc8a060);
+      beadString.position.set(0.28, 1.15, 0.2);
+      g.add(beadString);
+      for (let i = 0; i < 5; i++) {
+        const bead = sphere(0.025, 0xc8a060, { rough: 0.5 });
+        bead.position.set(0.28, 1.0 + i * 0.05, 0.22);
+        g.add(bead);
+      }
+      break;
+    }
+    case 'Jainism': {
+      // Simple white wrap with diagonal sash
+      const sash = box(0.4, 0.08, 0.04, 0xf2a93a);
+      sash.position.set(0, 1.55, 0.22);
+      sash.rotation.z = -0.3;
+      g.add(sash);
+      // Pichchi (peacock-feather broom) tucked at the hip
+      const handle = cyl(0.015, 0.015, 0.45, 0x8b5a2b);
+      handle.position.set(0.32, 1.2, 0.18);
+      handle.rotation.z = 0.3;
+      g.add(handle);
+      const broomBunch = box(0.1, 0.18, 0.08, 0xeeece0, { rough: 1 });
+      broomBunch.position.set(0.45, 1.45, 0.18);
+      broomBunch.rotation.z = 0.3;
+      g.add(broomBunch);
+      // White outer-robe drape
+      const drape = box(0.68, 0.7, 0.42, 0xfafafa, { rough: 0.9 });
+      drape.position.y = 1.5;
+      g.add(drape);
+      break;
+    }
+    case 'Hinduism': {
+      // 4 extra static arms (2 each side) for multi-armed deity feel —
+      // they're decorative; the boxing arms are separate
+      const armColor = def.skin;
+      const accs = [
+        { angle: 0.9,   prop: 'lotus' },
+        { angle: 1.7,   prop: 'conch' },
+        { angle: -0.9,  prop: 'mace' },
+        { angle: -1.7,  prop: 'discus' },
+      ];
+      accs.forEach(({ angle, prop }) => {
+        const arm = new THREE.Group();
+        arm.position.set(0, 1.7, 0);
+        // Shoulder cap
+        const shoulder = sphere(0.08, armColor, { rough: 0.85 });
+        arm.add(shoulder);
+        // Upper arm
+        const u = cyl(0.07, 0.07, 0.42, armColor, { rough: 0.85 });
+        u.position.set(Math.sin(angle) * 0.22, -0.21 * Math.cos(angle * 0.7), 0);
+        u.rotation.z = -angle;
+        arm.add(u);
+        // Forearm
+        const fa = cyl(0.06, 0.06, 0.38, armColor, { rough: 0.85 });
+        fa.position.set(Math.sin(angle) * 0.5, -0.5 * Math.cos(angle * 0.4), 0);
+        fa.rotation.z = -angle * 1.4;
+        arm.add(fa);
+        // Hand + prop
+        const handX = Math.sin(angle) * 0.7;
+        const handY = -0.4 * Math.cos(angle * 0.6) - 0.2;
+        if (prop === 'lotus') {
+          const lotusBase = sphere(0.06, 0xc8102e, { rough: 0.6 });
+          lotusBase.position.set(handX, handY, 0);
+          arm.add(lotusBase);
+          for (let i = 0; i < 5; i++) {
+            const a2 = (i / 5) * Math.PI * 2;
+            const petal = box(0.07, 0.04, 0.02, 0xff9caa, { rough: 0.6 });
+            petal.position.set(handX + Math.cos(a2) * 0.04, handY + Math.sin(a2) * 0.04, 0.02);
+            petal.rotation.z = a2;
+            arm.add(petal);
+          }
+        } else if (prop === 'conch') {
+          const conch = sphere(0.07, 0xfafaf0, { rough: 0.7 });
+          conch.position.set(handX, handY, 0);
+          conch.scale.set(1, 1.4, 1);
+          arm.add(conch);
+        } else if (prop === 'mace') {
+          const macePole = cyl(0.012, 0.012, 0.2, 0x6a4a10);
+          macePole.position.set(handX, handY + 0.1, 0);
+          arm.add(macePole);
+          const maceHead = sphere(0.06, 0xc8a060, { metal: 0.6 });
+          maceHead.position.set(handX, handY + 0.22, 0);
+          arm.add(maceHead);
+        } else if (prop === 'discus') {
+          const disc = new THREE.Mesh(
+            new THREE.TorusGeometry(0.08, 0.012, 6, 16),
+            new THREE.MeshStandardMaterial({ color: 0xd6a737, metalness: 0.7, roughness: 0.3 })
+          );
+          disc.position.set(handX, handY, 0);
+          disc.rotation.y = Math.PI / 2;
+          arm.add(disc);
+        }
+        g.add(arm);
+      });
+      // Sacred thread (yajnopavita) — thin diagonal cord across chest
+      const thread = cyl(0.008, 0.008, 0.85, 0xf0e8c8);
+      thread.position.set(0.05, 1.45, 0.21);
+      thread.rotation.z = -0.45;
+      g.add(thread);
+      // Lotus garland (pink necklace)
+      for (let i = -5; i <= 5; i++) {
+        const t = i / 5;
+        const lotus = sphere(0.035, 0xff7a9a, { rough: 0.5 });
+        lotus.position.set(t * 0.22, 1.85 - Math.abs(t) * 0.08, 0.22);
+        g.add(lotus);
+      }
+      break;
+    }
+    case 'Taoism': {
+      // Wide sleeves on the basic robe — extra cylinder shells around upper arm area
+      // Black sash with yin-yang medallion
+      const sash = box(0.62, 0.12, 0.44, 0x101010);
+      sash.position.y = 1.18;
+      g.add(sash);
+      // Yin-yang medallion (front-center)
+      const med = new THREE.Mesh(
+        new THREE.CircleGeometry(0.08, 24),
+        new THREE.MeshStandardMaterial({ color: 0xfafafa, roughness: 0.5 })
+      );
+      med.position.set(0, 1.18, 0.225);
+      g.add(med);
+      const medDark = new THREE.Mesh(
+        new THREE.CircleGeometry(0.08, 24, 0, Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5 })
+      );
+      medDark.position.set(0, 1.18, 0.226);
+      g.add(medDark);
+      // Wide outer-robe overlay
+      const outer = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.36, 0.46, 0.7, 16, 1, true),
+        new THREE.MeshStandardMaterial({ color: def.robe, roughness: 0.85, side: THREE.DoubleSide })
+      );
+      outer.position.y = 1.5;
+      g.add(outer);
+      break;
+    }
+    case 'Mormonism': {
+      // White shirt collar
+      const collar = box(0.34, 0.1, 0.36, 0xfafafa);
+      collar.position.y = 1.88;
+      g.add(collar);
+      // Long black tie down the chest
+      const tie = box(0.08, 0.55, 0.025, 0x0a0a0a);
+      tie.position.set(0, 1.55, 0.22);
+      g.add(tie);
+      // Tie knot
+      const knot = box(0.1, 0.08, 0.04, 0x0a0a0a);
+      knot.position.set(0, 1.83, 0.22);
+      g.add(knot);
+      // Black name tag on chest
+      const tag = box(0.22, 0.08, 0.02, 0x111111);
+      tag.position.set(0.15, 1.7, 0.22);
+      g.add(tag);
+      // White ELDER text plate
+      const tagText = box(0.2, 0.06, 0.005, 0xfafafa);
+      tagText.position.set(0.15, 1.7, 0.235);
+      g.add(tagText);
+      // Black backpack strap (right shoulder)
+      const strap = box(0.06, 0.5, 0.04, 0x222222);
+      strap.position.set(0.22, 1.55, 0.22);
+      strap.rotation.z = -0.05;
+      g.add(strap);
+      break;
+    }
+    case 'Scientology': {
+      // Dark suit jacket overlay
+      const jacket = box(0.66, 0.74, 0.44, 0x141a30);
+      jacket.position.y = 1.5;
+      g.add(jacket);
+      // Lapels (V-shape)
+      const lapelL = box(0.1, 0.4, 0.02, 0x0a0e1a);
+      lapelL.position.set(-0.12, 1.62, 0.225);
+      lapelL.rotation.z = -0.12;
+      g.add(lapelL);
+      const lapelR = box(0.1, 0.4, 0.02, 0x0a0e1a);
+      lapelR.position.set(0.12, 1.62, 0.225);
+      lapelR.rotation.z = 0.12;
+      g.add(lapelR);
+      // White shirt at neck
+      const shirt = box(0.18, 0.14, 0.4, 0xfafafa);
+      shirt.position.y = 1.84;
+      g.add(shirt);
+      // Dark tie
+      const tie = box(0.06, 0.4, 0.025, 0x6a1818);
+      tie.position.set(0, 1.55, 0.22);
+      g.add(tie);
+      break;
+    }
+    case 'UFO-ology': {
+      // Silver tracksuit overlay — visible stripes on shoulders
+      const trackTop = box(0.66, 0.74, 0.44, 0xb0b0b8, { metal: 0.4, rough: 0.5 });
+      trackTop.position.y = 1.5;
+      g.add(trackTop);
+      // Galaxy-print T-shirt panel showing through (chest)
+      const tee = box(0.4, 0.5, 0.46, 0x1a0a2a);
+      tee.position.set(0, 1.5, 0.005);
+      g.add(tee);
+      // Sparkly stars on the t-shirt
+      for (let i = 0; i < 8; i++) {
+        const star = sphere(0.012, 0xfafafa, { metal: 0.6 });
+        star.position.set((Math.random() - 0.5) * 0.36, 1.5 + (Math.random() - 0.5) * 0.4, 0.235);
+        g.add(star);
+      }
+      // Tiny floating saucer beside their head
+      const sg = new THREE.Group();
+      sg.position.set(0.55, 2.4, -0.1);
+      const sd = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.14, 0.03, 16),
+        new THREE.MeshStandardMaterial({ color: 0xa0a0a8, metalness: 0.7, roughness: 0.3 })
+      );
+      sg.add(sd);
+      const dome = sphere(0.06, 0x6affd6, { metal: 0.5, rough: 0.2 });
+      dome.position.y = 0.03;
+      sg.add(dome);
+      // Glow under
+      const glow = sphere(0.04, 0x6affd6, { metal: 0.6 });
+      glow.position.y = -0.04;
+      sg.add(glow);
+      g.add(sg);
+      // Silver stripes down arms area (suggestion)
+      for (let s of [-1, 1]) {
+        const stripe = box(0.02, 0.5, 0.05, 0x6affd6, { metal: 0.5 });
+        stripe.position.set(s * 0.31, 1.55, 0.22);
+        g.add(stripe);
+      }
+      break;
+    }
+    case 'Science': {
+      // Long open lab coat — front edges
+      const coatBase = box(0.7, 0.95, 0.44, 0xfafafa);
+      coatBase.position.y = 1.4;
+      g.add(coatBase);
+      // Inner shirt panel
+      const innerShirt = box(0.3, 0.7, 0.45, 0xc8e0ff);
+      innerShirt.position.set(0, 1.5, 0.005);
+      g.add(innerShirt);
+      // Pocket protector with pens (chest pocket)
+      const pocket = box(0.12, 0.14, 0.02, 0xe8e8e8);
+      pocket.position.set(-0.16, 1.62, 0.225);
+      g.add(pocket);
+      // Pens
+      for (let i = -1; i <= 1; i++) {
+        const pen = cyl(0.008, 0.008, 0.14, [0xc8102e, 0x2b6cb0, 0x44dd66][i + 1]);
+        pen.position.set(-0.18 + i * 0.025, 1.68, 0.232);
+        g.add(pen);
+      }
+      // Buttoned center seam
+      for (let i = 0; i < 4; i++) {
+        const btn = sphere(0.015, 0xe0e0e0);
+        btn.position.set(0, 1.7 - i * 0.18, 0.225);
+        g.add(btn);
+      }
+      // Lapel collar
+      const lapelL = box(0.1, 0.18, 0.02, 0xeaeaea);
+      lapelL.position.set(-0.16, 1.82, 0.222);
+      lapelL.rotation.z = -0.15;
+      g.add(lapelL);
+      const lapelR = box(0.1, 0.18, 0.02, 0xeaeaea);
+      lapelR.position.set(0.16, 1.82, 0.222);
+      lapelR.rotation.z = 0.15;
+      g.add(lapelR);
+      break;
+    }
+    case 'Atheism': {
+      // Plain T-shirt look — slightly darker overlay than torso
+      const tee = box(0.66, 0.7, 0.42, 0x2a2a2a);
+      tee.position.y = 1.5;
+      g.add(tee);
+      // Sleeve hems
+      for (let s of [-1, 1]) {
+        const hem = box(0.06, 0.05, 0.18, 0x1a1a1a);
+        hem.position.set(s * 0.34, 1.7, 0);
+        g.add(hem);
+      }
+      break;
+    }
+    case 'Techno-Utopiaism': {
+      // Black hoodie with glowing circuit accents
+      const hoodie = box(0.68, 0.78, 0.44, 0x0a0a16);
+      hoodie.position.y = 1.5;
+      g.add(hoodie);
+      // Glowing zipper
+      const zip = box(0.025, 0.7, 0.025, 0x6affd6, { metal: 0.5 });
+      zip.position.set(0, 1.5, 0.225);
+      g.add(zip);
+      // Hood opening at neck
+      const hood = new THREE.Mesh(
+        new THREE.TorusGeometry(0.22, 0.05, 8, 16),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a16, roughness: 0.85 })
+      );
+      hood.rotation.x = Math.PI / 2;
+      hood.position.y = 1.88;
+      g.add(hood);
+      // Glowing wristbands (small)
+      for (let s of [-1, 1]) {
+        const wb = new THREE.Mesh(
+          new THREE.TorusGeometry(0.1, 0.018, 6, 16),
+          new THREE.MeshStandardMaterial({ color: 0x6affd6, emissive: 0x6affd6, emissiveIntensity: 0.6, roughness: 0.4 })
+        );
+        wb.rotation.x = Math.PI / 2;
+        wb.position.set(s * 0.4, 1.05, 0);
+        g.add(wb);
+      }
+      break;
+    }
+  }
+  return g;
+}
+
+// Religious symbol floating behind/above each fighter — clearest ID badge
+function buildSymbolAura(belief, side) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 256, 256);
+  // Glowy circle backdrop
+  const grd = ctx.createRadialGradient(128, 128, 30, 128, 128, 128);
+  grd.addColorStop(0, 'rgba(255,232,160,0.7)');
+  grd.addColorStop(1, 'rgba(255,232,160,0)');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(128, 128, 128, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#d6a737';
+  ctx.lineWidth = 8;
+  ctx.fillStyle = '#fff7df';
+  ctx.font = 'bold 180px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // Per-belief glyph
+  const glyphs = {
+    'Catholicism':       '✝',
+    'Protestantism':     '📖',
+    'Orthodox Judaism':  '✡',
+    'Islam':             '☪',
+    'Jainism':           '🕉',
+    'Hinduism':          'ॐ',
+    'Taoism':            '☯',
+    'Mormonism':         '🅼',
+    'Scientology':       '⚔',
+    'UFO-ology':         '🛸',
+    'Science':           '⚛',
+    'Atheism':           'Ⓐ',
+    'Techno-Utopiaism':  '⚙',
+  };
+  ctx.fillText(glyphs[belief] || '?', 128, 138);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, opacity: 0.75 });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(1.4, 1.4, 1);
+  return sprite;
+}
+
 function buildFighter(belief, side /* -1 left, +1 right */) {
   const def = FIGHTERS[belief];
   const group = new THREE.Group();
@@ -2164,6 +2987,15 @@ function buildFighter(belief, side /* -1 left, +1 right */) {
   const emblem = buildEmblem(def.emblem, def.accent);
   emblem.position.y = 1.5;
   group.add(emblem);
+
+  // Layered, belief-specific outfit (capes, sashes, ties, tags, extra arms…)
+  const outfit = buildOutfitLayer(belief, def);
+  group.add(outfit);
+
+  // Floating religious symbol behind the fighter, gently bobbing as an aura
+  const aura = buildSymbolAura(belief, side);
+  aura.position.set(0, 3.0, -1.5);
+  group.add(aura);
 
   // Neck
   const neck = cyl(0.09, 0.1, 0.14, def.skin);
