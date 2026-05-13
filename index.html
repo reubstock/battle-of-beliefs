@@ -2619,21 +2619,27 @@ function updateFighter(f, t, dt) {
       break;
     }
     case 'ko': {
-      const k = Math.min(1, f.stateTimer / 1.0);
-      // Topple backward: tilt around their facing-perpendicular axis.
-      // The fighter has rotation.y set to face inward. Setting rotation.z tips
-      // them onto their back in a way that combines cleanly with the Y rotation.
-      const targetTilt = Math.PI / 2 * f.side; // left fighter (side -1) tips one way, right the other
+      // Slower, clearer fall — 1.4s arc instead of 1s, with eased-out timing so
+      // the topple has weight at the end. Smaller backward slide so the body
+      // stays on-camera (the old 1.1-unit slide pushed the fighter off the
+      // left/right edge on desktop FOV).
+      const dur = 1.4;
+      const raw = Math.min(1, f.stateTimer / dur);
+      const k = 1 - Math.pow(1 - raw, 3); // ease-out cubic
+      const targetTilt = Math.PI / 2 * f.side;
       g.rotation.z = targetTilt * k;
-      // Slide back away from opponent (in world x, away from origin)
-      g.position.x = f.side * 1.05 + f.side * k * 1.1;
-      // Drop the body height as they fall
-      g.position.y = -k * 0.3;
-      // Arms splay
-      targetArmL = { rx: 0.2, rz: 1.4 };
-      targetArmR = { rx: 0.2, rz: -1.4 };
-      // Twitch on the floor for a beat
-      const twitch = f.stateTimer > 1.0 ? Math.sin(f.stateTimer * 14) * 0.05 : 0;
+      g.position.x = f.side * 1.05 + f.side * k * 0.35;
+      // Tiny rise so the rotated body silhouette sits ON the canvas instead of
+      // sinking into it
+      g.position.y = k * 0.15;
+      // Arms splay outward as they fall
+      targetArmL = { rx: 0.1, rz: 1.4 };
+      targetArmR = { rx: 0.1, rz: -1.4 };
+      // Small "bounce" right at impact — body hits canvas at k≈0.85
+      const bounceK = Math.max(0, 1 - Math.abs(raw - 0.85) * 8);
+      g.position.y += bounceK * 0.12;
+      // Lingering twitch on the floor once they're down
+      const twitch = f.stateTimer > dur ? Math.sin(f.stateTimer * 12) * 0.04 : 0;
       g.rotation.x = twitch;
       break;
     }
@@ -2656,15 +2662,22 @@ function updateFighter(f, t, dt) {
   f.armR.rotation.x = THREE.MathUtils.lerp(f.armR.rotation.x, targetArmR.rx, armLerp);
   f.armR.rotation.z = THREE.MathUtils.lerp(f.armR.rotation.z, targetArmR.rz, armLerp);
 
-  // Label position lerp: 'side' (off-screen-side) → 'top' (above head)
+  // Label position lerp: 'side' (off-screen-side) → 'top' (above head, pushed outward)
   const targetLerp = f.labelMode === 'top' ? 1 : 0;
   f.labelLerp = THREE.MathUtils.lerp(f.labelLerp, targetLerp, 0.12);
   if (f.label) {
     // Side pos: (0, 2.4, -3.2) — local -z is behind fighter = the screen-side
-    // Top pos:  (0, 3.55, 0) — above head
+    // Top pos:  (0, 3.55, -2.0) — above head BUT also pushed -z (= further out
+    //   toward the fighter's own side of the screen) so the two banners don't
+    //   stack on top of each other near the ring center
     f.label.position.x = 0;
     f.label.position.y = THREE.MathUtils.lerp(2.4, 3.55, f.labelLerp);
-    f.label.position.z = THREE.MathUtils.lerp(-3.2, 0, f.labelLerp);
+    f.label.position.z = THREE.MathUtils.lerp(-3.2, -2.0, f.labelLerp);
+    // Hide the banner during KO — after the fighter is rotated flat on the
+    // canvas the local 'above head' position ends up on the floor, which looks
+    // wrong. The big K.O. overlay does the labeling anyway.
+    const targetOpacity = f.state === 'ko' ? 0 : 1;
+    f.label.material.opacity = THREE.MathUtils.lerp(f.label.material.opacity, targetOpacity, 0.18);
   }
 
   // Body bob (only when not in KO state)
