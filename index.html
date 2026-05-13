@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BATTLE OF BELIEFS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Bebas+Neue&family=Special+Elite&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #f7e9c9;
+    --paper: #fff7df;
+    --crimson: #c8102e;
+    --gold: #d6a737;
+    --shadow: rgba(0,0,0,0.55);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: #050505;
+    color: var(--ink);
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    user-select: none;
+  }
+  canvas#stage {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    display: block;
+    pointer-events: none; /* never block UI; 3D scene is presentational */
+    z-index: 1;
+  }
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 22px 28px 14px;
+    z-index: 30;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
+    pointer-events: auto;
+  }
+  #title {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(34px, 5.2vw, 70px);
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    text-shadow:
+      2px 2px 0 #6b0e1c,
+      4px 4px 0 #2a0509,
+      0 0 30px rgba(214,167,55,0.4);
+    line-height: 1;
+    text-align: center;
+  }
+  #title small {
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.22em;
+    letter-spacing: 0.5em;
+    color: #fff;
+    margin-top: 4px;
+    text-shadow: 1px 1px 0 #000;
+  }
+  #matchmake {
+    margin: 16px auto 0;
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    pointer-events: auto;
+  }
+  .mm-label {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(18px, 1.8vw, 26px);
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    padding: 6px 12px;
+    background: var(--crimson);
+    border: 2px solid #ffd76b;
+    box-shadow: 3px 3px 0 #000;
+  }
+  .dropdown {
+    position: relative;
+    display: inline-block;
+    min-width: 240px;
+    z-index: 32;
+  }
+  .dropdown-trigger {
+    width: 100%;
+    background: var(--paper);
+    color: #1a1a1a;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 1.7vw, 24px);
+    letter-spacing: 0.08em;
+    padding: 10px 38px 10px 16px;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000, inset 0 -3px 0 #d6c290;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+    transition: filter 0.15s;
+  }
+  .dropdown-trigger:hover { filter: brightness(1.05); }
+  .dropdown-trigger:focus { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .dropdown-arrow {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #000;
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition: transform 0.15s;
+  }
+  .dropdown.open .dropdown-arrow {
+    transform: translateY(-50%) rotate(180deg);
+  }
+  .dropdown-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--paper);
+    border: 3px solid #000;
+    box-shadow: 6px 6px 0 #000;
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    max-height: 60vh;
+    overflow-y: auto;
+    display: none;
+    z-index: 100;
+  }
+  .dropdown.open .dropdown-list { display: block; }
+  .dropdown-list li {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(16px, 1.4vw, 22px);
+    letter-spacing: 0.08em;
+    color: #1a1a1a;
+    transition: background 0.08s, color 0.08s;
+  }
+  .dropdown-list li:hover {
+    background: var(--gold);
+    color: #1a0a02;
+  }
+  .dropdown-list li.selected {
+    background: #1a1a1a;
+    color: var(--gold);
+    font-weight: bold;
+  }
+  .dropdown-list li.selected::before {
+    content: '✓ ';
+  }
+  .vs-pill {
+    font-family: 'Bungee', sans-serif;
+    color: #fff;
+    background: #111;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 18px;
+    letter-spacing: 0.18em;
+    border: 2px solid var(--gold);
+  }
+  #ringbell {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(20px, 2vw, 28px);
+    letter-spacing: 0.14em;
+    background: var(--gold);
+    color: #1a0a02;
+    padding: 10px 24px 10px 18px;
+    border: 3px solid #000;
+    box-shadow: 5px 5px 0 #000;
+    cursor: pointer;
+    transition: transform 0.06s, box-shadow 0.06s, filter 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #ringbell:hover { filter: brightness(1.08); }
+  #ringbell:hover .bell-svg { animation: shake 0.5s ease-in-out; transform-origin: 50% 6%; }
+  #ringbell:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 #000; }
+  #ringbell:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: 5px 5px 0 #000; }
+  #ringbell .bell-svg {
+    width: clamp(28px, 2.6vw, 38px);
+    height: clamp(28px, 2.6vw, 38px);
+    flex: 0 0 auto;
+    filter: drop-shadow(1px 1px 0 #5a3a0a);
+  }
+  @keyframes shake {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-22deg); }
+    40% { transform: rotate(18deg); }
+    60% { transform: rotate(-14deg); }
+    80% { transform: rotate(10deg); }
+  }
+
+  #round-info {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(60px, 14vw, 220px);
+    color: #fff;
+    text-shadow: 4px 4px 0 #c8102e, 8px 8px 0 #000;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 30;
+    letter-spacing: 0.04em;
+  }
+  #round-info.show {
+    animation: pop 1.2s ease-out forwards;
+  }
+  @keyframes pop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  #timer {
+    position: fixed;
+    top: 18px;
+    right: 22px;
+    font-family: 'Bungee', sans-serif;
+    font-size: 42px;
+    color: var(--gold);
+    background: #111;
+    padding: 4px 18px;
+    border: 3px solid var(--gold);
+    box-shadow: 3px 3px 0 #000;
+    z-index: 25;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #timer.show { opacity: 1; }
+
+  #fighter-tags {
+    position: fixed;
+    bottom: 24px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 36px;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  #fighter-tags.show { opacity: 1; }
+  .fighter-tag {
+    background: #111;
+    border: 3px solid var(--gold);
+    padding: 10px 18px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 2vw, 28px);
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    box-shadow: 4px 4px 0 #000;
+    max-width: 38vw;
+  }
+  .fighter-tag.left { border-left: 12px solid #2b6cb0; }
+  .fighter-tag.right { border-right: 12px solid #c8102e; }
+  .fighter-tag .corner { display: block; font-size: 0.55em; color: var(--gold); letter-spacing: 0.3em; }
+
+  #notecard-wrap {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  #notecard-wrap.show { opacity: 1; }
+  #notecard {
+    width: min(720px, 86vw);
+    background: var(--paper);
+    color: #1a1a1a;
+    padding: 36px 44px 44px;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    box-shadow: 12px 14px 0 rgba(0,0,0,0.7);
+    border: 3px solid #1a1a1a;
+    transform: translateY(180px) rotate(-1.4deg);
+    transition: transform 0.6s cubic-bezier(.22,1.3,.36,1);
+    position: relative;
+  }
+  #notecard-wrap.show #notecard {
+    transform: translateY(0) rotate(-1.4deg);
+  }
+  #notecard::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 18px;
+    background: var(--crimson);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+    border: 2px solid #1a1a1a;
+  }
+  #notecard h2 {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(20px, 2.2vw, 28px);
+    letter-spacing: 0.08em;
+    color: var(--crimson);
+    margin-bottom: 6px;
+  }
+  #notecard .winner-line {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(24px, 3vw, 40px);
+    color: #1a1a1a;
+    margin-bottom: 18px;
+    line-height: 1.05;
+  }
+  #notecard .move-line {
+    font-size: clamp(14px, 1.4vw, 18px);
+    color: #8a3a13;
+    margin-bottom: 14px;
+    font-weight: 700;
+  }
+  #notecard .quip {
+    font-size: clamp(16px, 1.6vw, 22px);
+    line-height: 1.45;
+    border-top: 2px dashed #888;
+    padding-top: 14px;
+    color: #1a1a1a;
+  }
+  #notecard .fineprint {
+    margin-top: 16px;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: #777;
+    text-transform: uppercase;
+  }
+  #replay {
+    position: fixed;
+    bottom: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    font-family: 'Bungee', sans-serif;
+    background: var(--gold);
+    color: #1a0a02;
+    padding: 10px 22px;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000;
+    cursor: pointer;
+    letter-spacing: 0.14em;
+  }
+  #replay.show { opacity: 1; pointer-events: auto; }
+
+  .credit {
+    position: fixed;
+    bottom: 8px;
+    right: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #555;
+    z-index: 60;
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="hud">
+  <div id="title">BATTLE OF BELIEFS<small>· THE THEOLOGICAL THROWDOWN ·</small></div>
+  <div id="matchmake">
+    <span class="mm-label">MATCH-MAKE</span>
+    <div class="dropdown" id="fighter1-dropdown">
+      <button type="button" class="dropdown-trigger">
+        <span class="dropdown-value">Catholicism</span>
+        <span class="dropdown-arrow"></span>
+      </button>
+      <ul class="dropdown-list" role="listbox"></ul>
+    </div>
+    <span class="vs-pill">VS</span>
+    <div class="dropdown" id="fighter2-dropdown">
+      <button type="button" class="dropdown-trigger">
+        <span class="dropdown-value">Science</span>
+        <span class="dropdown-arrow"></span>
+      </button>
+      <ul class="dropdown-list" role="listbox"></ul>
+    </div>
+    <button id="ringbell">
+      <svg class="bell-svg" viewBox="0 0 44 48" aria-hidden="true">
+        <defs>
+          <linearGradient id="brassGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff5c8"/>
+            <stop offset="0.28" stop-color="#f0c958"/>
+            <stop offset="0.62" stop-color="#b8861a"/>
+            <stop offset="1" stop-color="#6b4a10"/>
+          </linearGradient>
+          <linearGradient id="rimGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c8932a"/>
+            <stop offset="1" stop-color="#7a5210"/>
+          </linearGradient>
+        </defs>
+        <!-- Crown loop -->
+        <path d="M20 5 Q20 0 22 0 Q24 0 24 5" stroke="#3a2410" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Yoke / cap -->
+        <ellipse cx="22" cy="7" rx="4.5" ry="1.6" fill="#7a5210" stroke="#3a2410" stroke-width="1"/>
+        <!-- Bell body -->
+        <path d="M8 34 C6 26 9 11 22 11 C35 11 38 26 36 34 Z" fill="url(#brassGrad)" stroke="#3a2410" stroke-width="1.6"/>
+        <!-- Shine highlight -->
+        <path d="M13 18 Q12 26 14 32" stroke="#fff8d8" stroke-width="2" fill="none" opacity="0.55" stroke-linecap="round"/>
+        <!-- Mouth rim -->
+        <ellipse cx="22" cy="35" rx="14" ry="3" fill="url(#rimGrad)" stroke="#3a2410" stroke-width="1.5"/>
+        <!-- Clapper hanging out the bottom -->
+        <line x1="22" y1="36" x2="22" y2="42" stroke="#3a2410" stroke-width="1.4"/>
+        <circle cx="22" cy="44" r="3.2" fill="#2a1a08" stroke="#3a2410" stroke-width="1"/>
+      </svg>
+      <span>RING THE BELL</span>
+    </button>
+  </div>
+</div>
+
+<div id="timer">30</div>
+<div id="round-info"></div>
+
+<div id="fighter-tags">
+  <div class="fighter-tag left"><span class="corner">BLUE CORNER</span><span id="tag1">—</span></div>
+  <div class="fighter-tag right"><span class="corner">RED CORNER</span><span id="tag2">—</span></div>
+</div>
+
+<div id="notecard-wrap">
+  <div id="notecard">
+    <h2>OFFICIAL RULING</h2>
+    <div class="winner-line" id="nc-winner"></div>
+    <div class="move-line" id="nc-move"></div>
+    <div class="quip" id="nc-quip"></div>
+    <div class="fineprint">SIGNED, THE RING GIRL · BATTLE OF BELIEFS COMMISSION</div>
+  </div>
+</div>
+
+<button id="replay">REMATCH ANY TIME</button>
+
+<div class="credit">WEBGL · NO DEITIES WERE HARMED</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ============================================================
+   BELIEF SYSTEMS
+   ============================================================ */
+const BELIEFS = [
+  'Catholicism',
+  'Protestantism',
+  'Orthodox Judaism',
+  'Islam',
+  'Jainism',
+  'Hinduism',
+  'Taoism',
+  'Mormonism',
+  'Scientology',
+  'UFO-ology',
+  'Science',
+  'Atheism',
+  'Techno-Utopiaism',
+];
+
+// Visual config per belief: colors, head accessory, body details
+const FIGHTERS = {
+  'Catholicism': {
+    robe: 0xfefcf5, accent: 0xd6a737, shorts: 0xd6a737, skin: 0xf2cfa6,
+    head: 'mitre', emblem: 'cross', facial: null,
+  },
+  'Protestantism': {
+    robe: 0x1a1a1a, accent: 0xffffff, shorts: 0x1a1a1a, skin: 0xf2cfa6,
+    head: 'tabs', emblem: 'book', facial: null,
+  },
+  'Orthodox Judaism': {
+    robe: 0x111111, accent: 0xffffff, shorts: 0x111111, skin: 0xf2cfa6,
+    head: 'blackhat', emblem: 'tallit', facial: 'fullbeard',
+  },
+  'Islam': {
+    robe: 0xf4f4f4, accent: 0x14823a, shorts: 0x14823a, skin: 0xd9b58a,
+    head: 'turban', emblem: 'crescent', facial: 'shortbeard',
+  },
+  'Jainism': {
+    robe: 0xffffff, accent: 0xf2a93a, shorts: 0xffffff, skin: 0xd9b58a,
+    head: 'mukhpatti', emblem: 'broom', facial: null,
+  },
+  'Hinduism': {
+    robe: 0xf2832a, accent: 0xd6a737, shorts: 0xc23a14, skin: 0x6a7eb8,
+    head: 'crown', emblem: 'omarms', facial: null,
+  },
+  'Taoism': {
+    robe: 0x404044, accent: 0xf4f4f4, shorts: 0x202024, skin: 0xf2cfa6,
+    head: 'topknot', emblem: 'yinyang', facial: 'longbeard',
+  },
+  'Mormonism': {
+    robe: 0xffffff, accent: 0x1a1a1a, shorts: 0x1a1a1a, skin: 0xf2cfa6,
+    head: 'slick', emblem: 'nametag', facial: null,
+  },
+  'Scientology': {
+    robe: 0x202542, accent: 0xc0c4d6, shorts: 0x202542, skin: 0xf2cfa6,
+    head: 'slick', emblem: 'emeter', facial: null,
+  },
+  'UFO-ology': {
+    robe: 0xcfcfd6, accent: 0x6affd6, shorts: 0x444448, skin: 0xf2cfa6,
+    head: 'tinfoil', emblem: 'saucer', facial: null,
+  },
+  'Science': {
+    robe: 0xffffff, accent: 0x2b8cd6, shorts: 0x2b8cd6, skin: 0xf2cfa6,
+    head: 'einstein', emblem: 'beaker', facial: 'wildhair',
+  },
+  'Atheism': {
+    robe: 0x2c2c2c, accent: 0xc8102e, shorts: 0x2c2c2c, skin: 0xf2cfa6,
+    head: 'bald', emblem: 'redA', facial: 'glasses',
+  },
+  'Techno-Utopiaism': {
+    robe: 0x111122, accent: 0x6affd6, shorts: 0x222244, skin: 0xf2cfa6,
+    head: 'vr', emblem: 'circuit', facial: null,
+  },
+};
+
+/* ============================================================
+   MATCHUP MATRIX
+   Keys are sorted-tuple "A|B". Winner + finishing move + quip.
+   78 pairs total.
+   ============================================================ */
+function mkKey(a, b) { return [a, b].sort().join('|'); }
+
+const MATCHUPS = {};
+function M(a, b, winner, move, quip) {
+  MATCHUPS[mkKey(a, b)] = { winner, move, quip };
+}
+
+// Catholicism vs ...
+M('Catholicism', 'Protestantism', 'Protestantism',
+  'a Reformation cross-counter', "Protestantism nailed 95 theses, then nailed the dismount. Catholicism got Wittenberged.");
+M('Catholicism', 'Orthodox Judaism', 'Orthodox Judaism',
+  'a 5,786-year-old elbow', "Orthodox Judaism had been jabbing since Abraham. Catholicism showed up two millennia late and got tutored.");
+M('Catholicism', 'Islam', 'Islam',
+  'a five-prayers-a-day cardio combo', "Five prayers daily made for one fit fighter. Catholicism gassed out around Lauds.");
+M('Catholicism', 'Jainism', 'Jainism',
+  'an extremely non-violent sidestep', "The Pope swung. The pew was empty. Jainism's ahimsa dodge left him punching incense.");
+M('Catholicism', 'Hinduism', 'Hinduism',
+  'a four-armed pummeling (with a rosary in one hand for irony)', "Catholicism brought one God. Hinduism brought 33 million — and three of them threw hooks.");
+M('Catholicism', 'Taoism', 'Taoism',
+  'a non-doing of any visible kind', "Catholicism pushed; Taoism wasn't there. The Tao that can be punched is not the eternal Tao.");
+M('Catholicism', 'Mormonism', 'Catholicism',
+  'two thousand years of HR experience', "The Vatican has been managing scandals since before Mormonism had a postcode. Institutional memory wins.");
+M('Catholicism', 'Scientology', 'Catholicism',
+  'a free confession to the jaw', "Confession is free. Auditing is a subscription. Scientology ran out of credit by round two.");
+M('Catholicism', 'UFO-ology', 'Catholicism',
+  'a stained-glass left hook', "Stained glass beats tinfoil. Refraction over reflection, every time.");
+M('Catholicism', 'Science', 'Science',
+  'a peer-reviewed uppercut', "Galileo wanted a word. The Earth still moved — and it moved out of the way of the cross-counter.");
+M('Catholicism', 'Atheism', 'Catholicism',
+  'a faith-based jab', "Atheism shouted 'prove it.' The papal jab proved it. Q.E.D.");
+M('Catholicism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'an algorithmic absolution', "An app absolved Catholicism in 0.3 seconds. No priest, no Hail Marys, no overhead.");
+
+// Protestantism vs ...
+M('Protestantism', 'Orthodox Judaism', 'Orthodox Judaism',
+  'a millennia-deep counter', "Protestantism showed up in 1517. Orthodox Judaism showed up in 1500 BCE. Seniority took the W.");
+M('Protestantism', 'Islam', 'Islam',
+  'a cardio-of-the-faithful breaker', "Sunday-service stamina is no match for five-times-a-day training.");
+M('Protestantism', 'Jainism', 'Jainism',
+  'a calmly executed nothing', "Sola fide met sola ahimsa. Protestantism punched. The man wasn't there.");
+M('Protestantism', 'Hinduism', 'Hinduism',
+  'a multi-armed flurry', "One God versus thirty-three million. Even the math was unfair.");
+M('Protestantism', 'Taoism', 'Taoism',
+  'a flow-state float-and-sting', "Protestantism preached. Taoism flowed. Words bounced off water.");
+M('Protestantism', 'Mormonism', 'Mormonism',
+  'a clean-cut cross', "Mormonism is just Protestantism with extra steps — and the extra steps included a leg day.");
+M('Protestantism', 'Scientology', 'Protestantism',
+  'a back-to-basics body shot', "Protestantism literally invented protesting weird churches. Scientology never stood a chance.");
+M('Protestantism', 'UFO-ology', 'Protestantism',
+  'a sola scriptura slap', "At least one of them brought a book. Belief without evidence got knocked out by belief with a footnote.");
+M('Protestantism', 'Science', 'Science',
+  'a pH-1 splash to the face', "Protestantism brought King James. Science brought sulfuric acid. Chemistry wrote the eulogy.");
+M('Protestantism', 'Atheism', 'Protestantism',
+  'a believer's left hook', "Atheism showed up with a vibe. Protestantism showed up with a hymnal and follow-through.");
+M('Protestantism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a disrupted reformation', "Reformation got reformed. Disruption beats disruption when the disruption ships faster.");
+
+// Orthodox Judaism vs ...
+M('Orthodox Judaism', 'Islam', 'Orthodox Judaism',
+  'a Talmudic back-and-forth that ended in an elbow', "Both claimed Abraham. The grandson with more bar mitzvah money came in well-funded and well-rested.");
+M('Orthodox Judaism', 'Jainism', 'Jainism',
+  'a debate Jainism declined to attend', "You can't out-argue silence. The rabbi found himself shadow-boxing a polite vegan.");
+M('Orthodox Judaism', 'Hinduism', 'Hinduism',
+  'a reincarnated rope-a-dope', "Three reincarnations into the bout, the rabbi was still on round one. Cosmic respawn won.");
+M('Orthodox Judaism', 'Taoism', 'Taoism',
+  'a wuwei dodge', "Five thousand years of study versus five thousand years of un-study. Un-study had less to remember.");
+M('Orthodox Judaism', 'Mormonism', 'Orthodox Judaism',
+  'a cross-examination by an actual rabbi', "Mormonism's claim to be 'the real lost tribe' did not survive cross-examination by counsel that bills hourly.");
+M('Orthodox Judaism', 'Scientology', 'Orthodox Judaism',
+  'a guilt-fueled hook', "Five thousand years of guilt beats a thetan any day. The rabbi's mother helped throw the punch.");
+M('Orthodox Judaism', 'UFO-ology', 'Orthodox Judaism',
+  'a chosen-people choke-out', "Orthodox Judaism already knew G-d. He doesn't need to come from outer space.");
+M('Orthodox Judaism', 'Science', 'Orthodox Judaism',
+  'a Talmudic peer review', "The Talmud is just a four-thousand-year-old peer-review thread. The original methodology took the W.");
+M('Orthodox Judaism', 'Atheism', 'Orthodox Judaism',
+  'a brisket-based body shot', "Atheism said there's no God. The rabbi said, 'Fine, but what about the schedule?' Atheism could not argue with brisket.");
+M('Orthodox Judaism', 'Techno-Utopiaism', 'Orthodox Judaism',
+  'a 613-step combo', "Tech bros built the algorithm. Rabbis ARE the algorithm — six hundred and thirteen commandments deep.");
+
+// Islam vs ...
+M('Islam', 'Jainism', 'Jainism',
+  'a perfectly executed absence', "Even a jihad needs a target. The target had stepped aside to avoid stepping on an ant.");
+M('Islam', 'Hinduism', 'Hinduism',
+  'a six-armed flurry', "Six arms, six gloves. Two arms, two gloves. Arithmetic prevailed.");
+M('Islam', 'Taoism', 'Taoism',
+  'a single relaxed exhale', "Islam prayed five times. Taoism breathed once. The breath won.");
+M('Islam', 'Mormonism', 'Islam',
+  'a better-corner gospel', "Both received their book from an angel. Islam's angel had a better trainer.");
+M('Islam', 'Scientology', 'Islam',
+  'a submission to the better Submission', "Submission to God beats submission to L. Ron, especially when the latter charges by the hour.");
+M('Islam', 'UFO-ology', 'Islam',
+  'a 1,400-year-old citation slap', "Real revelation versus alleged abduction. The Qur'an has fourteen centuries of footnotes; UFO-ology has YouTube.");
+M('Islam', 'Science', 'Science',
+  'a differential-equations dive', "Islam invented algebra. Science inherited it and bought a graphing calculator. The heir collected the estate.");
+M('Islam', 'Atheism', 'Islam',
+  'an ummah-deep body shot', "Atheism brought a Reddit comment. Islam brought 1.8 billion siblings. Numbers helped.");
+M('Islam', 'Techno-Utopiaism', 'Islam',
+  'a source-code shoulder check', "Techno-Utopiaism said God is an algorithm. Islam said Allah wrote the algorithm. The source got copyright.");
+
+// Jainism vs ...
+M('Jainism', 'Hinduism', 'Jainism',
+  'a sweep — of ants — while opponent punched air', "Hinduism flailed at empty space for six rounds while Jainism quietly relocated a beetle. Patience won.");
+M('Jainism', 'Taoism', 'Taoism',
+  'a more thorough non-fighting', "Both refused to fight. Taoism refused harder. The void out-voided the void.");
+M('Jainism', 'Mormonism', 'Jainism',
+  'a doorbell that nobody answered', "Mormonism knocked. Jainism wasn't home — he was on the porch, sweeping bugs to safety.");
+M('Jainism', 'Scientology', 'Jainism',
+  'a free spiritual audit', "Scientology charged for the audit. Jainism audited for free, found Scientology lacking, opponent forfeited.");
+M('Jainism', 'UFO-ology', 'Jainism',
+  'a different kind of light', "UFO-ology saw lights. Jainism saw enlightenment. UFO blinked first.");
+M('Jainism', 'Science', 'Jainism',
+  'an unmeasurable feint', "Science observed; Jainism wasn't an event. Heisenberg quietly threw in the towel on his own behalf.");
+M('Jainism', 'Atheism', 'Jainism',
+  'a serene non-engagement', "Atheism punched harder air than usual — and pulled a muscle. Jainism collected the win without lifting a glove.");
+M('Jainism', 'Techno-Utopiaism', 'Jainism',
+  'a target the algorithm could not optimize', "The algorithm couldn't fit a function to a man who refused to be a data point.");
+
+// Hinduism vs ...
+M('Hinduism', 'Taoism', 'Taoism',
+  'a stream that wore down a mountain', "Hinduism brought 33 million gods. Taoism brought one quiet stream. Erosion is patient.");
+M('Hinduism', 'Mormonism', 'Hinduism',
+  'a six-armed door-slam', "Six arms versus door-to-door pamphlets. Distribution was outflanked by infrastructure.");
+M('Hinduism', 'Scientology', 'Hinduism',
+  'a free past-life recall', "Reincarnation is free. Auditing costs thousands per past life. Better unit economics.");
+M('Hinduism', 'UFO-ology', 'Hinduism',
+  'a Vedic vimana to the chin', "Hinduism has had flying chariots in scripture for three thousand years. UFO-ology rediscovered them without credit.");
+M('Hinduism', 'Science', 'Hinduism',
+  'a multiverse prediction, on time', "The Vedas predicted multiverses. Physics caught up — and was late for the opening bell.");
+M('Hinduism', 'Atheism', 'Hinduism',
+  'a buy-one-get-one godhead', "Atheism said 'no gods.' Hinduism said 'I have extras if you'd like one.' Atheism took the trade and got reincarnated.");
+M('Hinduism', 'Techno-Utopiaism', 'Hinduism',
+  'a Brahman-singularity merge', "Techno-Utopiaism is chasing the Singularity. Hinduism IS the Singularity — Brahman called and asked for prior art credit.");
+
+// Taoism vs ...
+M('Taoism', 'Mormonism', 'Taoism',
+  'a flow that went around the tie', "Taoism went with the flow. The flow went around Mormonism's tie and out the back of his head.");
+M('Taoism', 'Scientology', 'Taoism',
+  'a silence the audit could not bill for', "Auditing requires the subject to speak. The sage said nothing. The sage won — and was billed nothing.");
+M('Taoism', 'UFO-ology', 'Taoism',
+  'an inward gaze', "UFO-ology looked up. Taoism looked in. In was closer to the answer.");
+M('Taoism', 'Science', 'Taoism',
+  'an unmeasurable sweep', "Science needed an object to measure. Taoism declined to be one. The instrument shrugged.");
+M('Taoism', 'Atheism', 'Taoism',
+  'a deeper non-existence', "Atheism said God doesn't exist. Taoism said the existence question doesn't exist. The bigger negation won.");
+M('Taoism', 'Techno-Utopiaism', 'Taoism',
+  'an open-source silence', "Techno-Utopiaism shipped a chatbot. Taoism invented silence three thousand years ago. Superior product, zero compute.");
+
+// Mormonism vs ...
+M('Mormonism', 'Scientology', 'Mormonism',
+  'a wholesome jab with a casserole follow-through', "Two American originals walk into a ring. The one with the 401(k) and the family ward walked out.");
+M('Mormonism', 'UFO-ology', 'Mormonism',
+  'a documented angel uppercut', "Both involve aliens. Only one has a temple, a tabernacle, and a really good budget.");
+M('Mormonism', 'Science', 'Science',
+  'a request to see the golden plates', "Mormonism brought the Golden Plates. Science asked to inspect them. The bout ended in the lobby.");
+M('Mormonism', 'Atheism', 'Mormonism',
+  'an unstoppable conversation', "Nobody out-talks a missionary. Atheism's monologue got out-monologued at the door.");
+M('Mormonism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a push notification', "Door-to-door got replaced by push notifications. Distribution upgrade by a couple of decades.");
+
+// Scientology vs ...
+M('Scientology', 'UFO-ology', 'Scientology',
+  'a legally-binding thetan combo', "Scientology's aliens have lawyers. UFO-ology's aliens have blurry phone pics. Counsel won.");
+M('Scientology', 'Science', 'Science',
+  'a trademark dispute', "It's right there in the name. One of them is squatting on intellectual property and the other one wrote the textbook.");
+M('Scientology', 'Atheism', 'Atheism',
+  'a refusal to pay for the audit', "Atheism declined the audit. Scientology couldn't proceed without payment. Forfeit by invoice.");
+M('Scientology', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a freemium uppercut', "Techno-Utopiaism's cult is free. Scientology's cult charges by the hour. Free beats freemium beats paywall.");
+
+// UFO-ology vs ...
+M('UFO-ology', 'Science', 'Science',
+  'a peer-review pin', "Peer review pinned the saucer. Citation needed — none provided.");
+M('UFO-ology', 'Atheism', 'Atheism',
+  'a skeptical shrug to the temple', "UFO-ology believes too much. Atheism believes too little. Pure disbelief proved disarming.");
+M('UFO-ology', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a shipped spaceship', "Techno-Utopiaism already built the rocket. UFO-ology is still waiting at the landing pad with a snack.");
+
+// Science vs ...
+M('Science', 'Atheism', 'Science',
+  'a method to the madness', "Atheism is a hobby. Science is a method. Methodology pinned the hobbyist in round two.");
+M('Science', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a patented digestion', "Techno-Utopiaism ate Science's lunch — and then patented the digestion process.");
+
+// Atheism vs Techno-Utopiaism
+M('Atheism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a self-deifying upload', "Atheism said no god is needed. Techno-Utopiaism said 'I AM god now.' Capitalization carried the round.");
+
+/* ============================================================
+   THREE.JS SCENE
+   ============================================================ */
+const canvas = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x06070b);
+scene.fog = new THREE.Fog(0x06070b, 18, 50);
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+camera.position.set(0, 5.6, 13.5);
+camera.lookAt(0, 1.5, 0);
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ----- Lighting ----- */
+const ambient = new THREE.AmbientLight(0x4a3a40, 0.5);
+scene.add(ambient);
+
+const spot = new THREE.SpotLight(0xfff2c8, 4.5, 40, Math.PI / 4.5, 0.45, 1);
+spot.position.set(0, 14, 2);
+spot.target.position.set(0, 0, 0);
+spot.castShadow = true;
+spot.shadow.mapSize.set(1024, 1024);
+spot.shadow.camera.near = 1;
+spot.shadow.camera.far = 30;
+scene.add(spot);
+scene.add(spot.target);
+
+const rim = new THREE.DirectionalLight(0x6688aa, 0.6);
+rim.position.set(-5, 4, -5);
+scene.add(rim);
+
+const cornerBlue = new THREE.PointLight(0x2b6cb0, 1.4, 12);
+cornerBlue.position.set(-3.5, 2.8, 3.5);
+scene.add(cornerBlue);
+const cornerRed = new THREE.PointLight(0xc8102e, 1.4, 12);
+cornerRed.position.set(3.5, 2.8, 3.5);
+scene.add(cornerRed);
+
+/* ----- Floor (arena) ----- */
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(40, 32),
+  new THREE.MeshStandardMaterial({ color: 0x0a0a10, roughness: 0.95 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -1.1;
+floor.receiveShadow = true;
+scene.add(floor);
+
+/* ----- Boxing Ring ----- */
+function buildRing() {
+  const ringGroup = new THREE.Group();
+
+  // Apron (skirted base under the mat)
+  const apron = new THREE.Mesh(
+    new THREE.BoxGeometry(9, 1.0, 9),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 })
+  );
+  apron.position.y = -0.5;
+  apron.receiveShadow = true;
+  apron.castShadow = true;
+  ringGroup.add(apron);
+
+  // Apron stripe (gold trim)
+  const apronTrim = new THREE.Mesh(
+    new THREE.BoxGeometry(9.05, 0.15, 9.05),
+    new THREE.MeshStandardMaterial({ color: 0xd6a737, roughness: 0.5, metalness: 0.4 })
+  );
+  apronTrim.position.y = -0.85;
+  ringGroup.add(apronTrim);
+
+  // Mat (canvas) — slight off-white
+  const mat = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.05, 8),
+    new THREE.MeshStandardMaterial({ color: 0xe8d8ad, roughness: 0.95 })
+  );
+  mat.position.y = 0.02;
+  mat.receiveShadow = true;
+  ringGroup.add(mat);
+
+  // Center logo (a stylized B)
+  const logoCanvas = document.createElement('canvas');
+  logoCanvas.width = 512; logoCanvas.height = 512;
+  const ctx2d = logoCanvas.getContext('2d');
+  ctx2d.fillStyle = '#e8d8ad';
+  ctx2d.fillRect(0, 0, 512, 512);
+  ctx2d.strokeStyle = '#7a1a26';
+  ctx2d.lineWidth = 8;
+  ctx2d.strokeRect(14, 14, 484, 484);
+  ctx2d.fillStyle = '#7a1a26';
+  ctx2d.font = 'bold 200px sans-serif';
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'middle';
+  ctx2d.fillText('BoB', 256, 256);
+  ctx2d.font = 'bold 38px sans-serif';
+  ctx2d.fillText('BATTLE OF BELIEFS', 256, 410);
+  const logoTex = new THREE.CanvasTexture(logoCanvas);
+  const logo = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.2, 4.2),
+    new THREE.MeshStandardMaterial({ map: logoTex, transparent: false, roughness: 0.9 })
+  );
+  logo.rotation.x = -Math.PI / 2;
+  logo.position.y = 0.06;
+  ringGroup.add(logo);
+
+  // 4 corner posts
+  const postPositions = [
+    [-3.95, 0, -3.95],
+    [ 3.95, 0, -3.95],
+    [-3.95, 0,  3.95],
+    [ 3.95, 0,  3.95],
+  ];
+  const postColors = [0xc8102e, 0xc8102e, 0x2b6cb0, 0x2b6cb0]; // red corners back, blue corners front
+  postPositions.forEach((p, i) => {
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.14, 0.16, 2.6, 16),
+      new THREE.MeshStandardMaterial({ color: postColors[i], roughness: 0.5, metalness: 0.2 })
+    );
+    post.position.set(p[0], 1.3, p[2]);
+    post.castShadow = true;
+    ringGroup.add(post);
+
+    // Padded turnbuckle
+    const pad = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 0.5, 0.6),
+      new THREE.MeshStandardMaterial({ color: postColors[i], roughness: 0.8 })
+    );
+    pad.position.set(p[0], 2.0, p[2]);
+    ringGroup.add(pad);
+
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 16, 12),
+      new THREE.MeshStandardMaterial({ color: 0xd6a737, roughness: 0.3, metalness: 0.6 })
+    );
+    cap.position.set(p[0], 2.7, p[2]);
+    ringGroup.add(cap);
+  });
+
+  // Ropes — three levels, four sides, two colors alternating
+  const ropeColors = [0xc8102e, 0xffffff, 0x2b6cb0];
+  const ropeHeights = [0.7, 1.3, 1.9];
+  ropeHeights.forEach((h, idx) => {
+    const c = ropeColors[idx];
+    // 4 sides
+    const sides = [
+      { len: 7.9, axis: 'x', pos: [0, h,  3.95] }, // front
+      { len: 7.9, axis: 'x', pos: [0, h, -3.95] }, // back
+      { len: 7.9, axis: 'z', pos: [-3.95, h, 0] }, // left
+      { len: 7.9, axis: 'z', pos: [ 3.95, h, 0] }, // right
+    ];
+    sides.forEach(s => {
+      const rope = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, s.len, 8),
+        new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 })
+      );
+      if (s.axis === 'x') rope.rotation.z = Math.PI / 2;
+      else rope.rotation.x = Math.PI / 2;
+      rope.position.set(...s.pos);
+      ringGroup.add(rope);
+    });
+  });
+
+  scene.add(ringGroup);
+  return ringGroup;
+}
+buildRing();
+
+/* ----- Brass Bell (the literal ringside bell) ----- */
+let brassBell = null;
+function buildBrassBell() {
+  const root = new THREE.Group();
+
+  // Vertical extension rising from corner-post top
+  const ext = box(0.08, 0.7, 0.08, 0x3a2410, { rough: 0.85 });
+  ext.position.set(0, 0.35, 0);
+  root.add(ext);
+
+  // Horizontal arm extending in +z (toward camera) so the bell hangs in the foreground
+  const arm = box(0.08, 0.08, 0.8, 0x3a2410, { rough: 0.85 });
+  arm.position.set(0, 0.7, 0.4);
+  root.add(arm);
+
+  // Tiny mounting pad at end of arm
+  const pad = box(0.16, 0.06, 0.16, 0x6a4a10, { metal: 0.6, rough: 0.5 });
+  pad.position.set(0, 0.7, 0.8);
+  root.add(pad);
+
+  // Two hanging chains (more authentic than a single chain)
+  const chain1 = cyl(0.018, 0.018, 0.35, 0x222222, { metal: 0.6, rough: 0.4 });
+  chain1.position.set(-0.04, 0.5, 0.8);
+  root.add(chain1);
+  const chain2 = cyl(0.018, 0.018, 0.35, 0x222222, { metal: 0.6, rough: 0.4 });
+  chain2.position.set(0.04, 0.5, 0.8);
+  root.add(chain2);
+
+  // ----- Pivot (the bell itself; rotates around its top when struck) -----
+  const pivot = new THREE.Group();
+  pivot.position.set(0, 0.3, 0.8);
+  root.add(pivot);
+
+  // Yoke / crown cap
+  const yoke = cyl(0.08, 0.16, 0.1, 0xa8761e, { metal: 0.95, rough: 0.18 });
+  yoke.position.y = -0.02;
+  pivot.add(yoke);
+
+  // Bell body — truncated cone, brass
+  const bellGeo = new THREE.CylinderGeometry(0.18, 0.42, 0.6, 28, 4, true);
+  const bellMat = new THREE.MeshStandardMaterial({
+    color: 0xe2b54a, metalness: 0.95, roughness: 0.18, side: THREE.DoubleSide,
+  });
+  const body = new THREE.Mesh(bellGeo, bellMat);
+  body.position.y = -0.36;
+  body.castShadow = true;
+  pivot.add(body);
+
+  // Decorative bands
+  const band1 = new THREE.Mesh(
+    new THREE.TorusGeometry(0.24, 0.022, 8, 28),
+    new THREE.MeshStandardMaterial({ color: 0x6a4a10, metalness: 0.85, roughness: 0.35 })
+  );
+  band1.rotation.x = Math.PI / 2;
+  band1.position.y = -0.18;
+  pivot.add(band1);
+
+  const band2 = new THREE.Mesh(
+    new THREE.TorusGeometry(0.36, 0.025, 8, 28),
+    new THREE.MeshStandardMaterial({ color: 0x6a4a10, metalness: 0.85, roughness: 0.35 })
+  );
+  band2.rotation.x = Math.PI / 2;
+  band2.position.y = -0.5;
+  pivot.add(band2);
+
+  // Flared bottom rim
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(0.42, 0.04, 10, 32),
+    new THREE.MeshStandardMaterial({ color: 0xb8861a, metalness: 0.95, roughness: 0.22 })
+  );
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = -0.66;
+  pivot.add(rim);
+
+  // Shadow disc inside the bell mouth (dark interior)
+  const inside = new THREE.Mesh(
+    new THREE.CircleGeometry(0.38, 24),
+    new THREE.MeshStandardMaterial({ color: 0x1a0a02, roughness: 1, side: THREE.DoubleSide })
+  );
+  inside.rotation.x = Math.PI / 2;
+  inside.position.y = -0.64;
+  pivot.add(inside);
+
+  // Clapper rope and ball (will be visible peeking out the mouth)
+  const clapperRope = cyl(0.01, 0.01, 0.55, 0x111111);
+  clapperRope.position.y = -0.36;
+  pivot.add(clapperRope);
+
+  const clapperBall = sphere(0.09, 0x3a2a10, { metal: 0.7, rough: 0.4 });
+  clapperBall.position.y = -0.64;
+  pivot.add(clapperBall);
+
+  // Position root at top of front-right blue corner post
+  root.position.set(3.95, 2.6, 3.95);
+
+  scene.add(root);
+  return { root, pivot, clapperBall };
+}
+brassBell = buildBrassBell();
+
+// Swing state
+let bellSwingEnergy = 0;
+let bellSwingTime = 0;
+function triggerBellSwing(strength = 1) {
+  bellSwingEnergy = Math.max(bellSwingEnergy, strength);
+  bellSwingTime = 0;
+}
+
+/* ----- Audience ----- */
+function buildAudience() {
+  const audience = new THREE.Group();
+  const headGeo = new THREE.SphereGeometry(0.22, 8, 6);
+  const palette = [0xa05a3a, 0x8b6e4e, 0xd9b58a, 0x6a4a35, 0xf2cfa6, 0x4a3525];
+  // ring of seats
+  for (let ring = 0; ring < 5; ring++) {
+    const radius = 8 + ring * 1.4;
+    const count = 24 + ring * 8;
+    const y = -0.4 + ring * 0.35;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + ring * 0.13;
+      const x = Math.cos(a) * radius;
+      const z = Math.sin(a) * radius;
+      const head = new THREE.Mesh(
+        headGeo,
+        new THREE.MeshStandardMaterial({
+          color: palette[Math.floor(Math.random() * palette.length)],
+          roughness: 0.9,
+        })
+      );
+      head.position.set(x, y, z);
+      head.userData.basePhase = Math.random() * Math.PI * 2;
+      head.userData.baseY = y;
+      audience.add(head);
+    }
+  }
+  scene.add(audience);
+  return audience;
+}
+const audience = buildAudience();
+
+/* ============================================================
+   FIGHTER FACTORY
+   ============================================================ */
+function box(w, h, d, color, opts = {}) {
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.rough ?? 0.7, metalness: opts.metal ?? 0.05,
+    transparent: opts.transparent || false, opacity: opts.opacity ?? 1,
+  });
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.castShadow = true;
+  return m;
+}
+function sphere(r, color, opts = {}) {
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.rough ?? 0.7, metalness: opts.metal ?? 0.05,
+  });
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat);
+  m.castShadow = true;
+  return m;
+}
+function cyl(rt, rb, h, color, opts = {}) {
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.rough ?? 0.7, metalness: opts.metal ?? 0.05,
+  });
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 16), mat);
+  m.castShadow = true;
+  return m;
+}
+
+function buildHeadProp(kind, color, accent) {
+  const g = new THREE.Group();
+  switch (kind) {
+    case 'mitre': {
+      // tall white pointed hat
+      const hat = new THREE.Mesh(
+        new THREE.ConeGeometry(0.32, 0.85, 4),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+      );
+      hat.rotation.y = Math.PI / 4;
+      hat.position.y = 0.42;
+      hat.castShadow = true;
+      g.add(hat);
+      // gold band
+      const band = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.34, 0.34, 0.08, 16),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.4, metalness: 0.6 })
+      );
+      band.position.y = 0.06;
+      g.add(band);
+      // cross on top
+      const c1 = box(0.04, 0.18, 0.04, accent, { metal: 0.6 });
+      c1.position.y = 0.95;
+      g.add(c1);
+      const c2 = box(0.12, 0.04, 0.04, accent, { metal: 0.6 });
+      c2.position.y = 0.92;
+      g.add(c2);
+      break;
+    }
+    case 'tabs': {
+      // Geneva preaching tabs - small white rectangles at neck, no hat (just hair)
+      const hair = box(0.5, 0.18, 0.42, 0x1a0e0e, { rough: 0.95 });
+      hair.position.y = 0.05;
+      g.add(hair);
+      break;
+    }
+    case 'blackhat': {
+      const brim = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.45, 0.45, 0.04, 24),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 })
+      );
+      brim.position.y = 0.08;
+      g.add(brim);
+      const crown = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 0.3, 16),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.85 })
+      );
+      crown.position.y = 0.25;
+      g.add(crown);
+      // payot (sideburn curls)
+      const payL = cyl(0.04, 0.04, 0.32, 0x1a1410, { rough: 1 });
+      payL.position.set(-0.28, -0.18, 0.05);
+      g.add(payL);
+      const payR = cyl(0.04, 0.04, 0.32, 0x1a1410, { rough: 1 });
+      payR.position.set(0.28, -0.18, 0.05);
+      g.add(payR);
+      break;
+    }
+    case 'turban': {
+      const t = new THREE.Mesh(
+        new THREE.TorusGeometry(0.3, 0.16, 12, 24),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.85 })
+      );
+      t.rotation.x = Math.PI / 2;
+      t.position.y = 0.1;
+      g.add(t);
+      const top = sphere(0.28, color, { rough: 0.85 });
+      top.position.y = 0.22;
+      g.add(top);
+      const stripe = new THREE.Mesh(
+        new THREE.TorusGeometry(0.31, 0.04, 8, 24),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.6 })
+      );
+      stripe.rotation.x = Math.PI / 2;
+      stripe.position.y = 0.16;
+      g.add(stripe);
+      break;
+    }
+    case 'mukhpatti': {
+      // Jain monk: bald, mouth cloth (added at face level)
+      const cloth = box(0.42, 0.16, 0.04, color);
+      cloth.position.set(0, -0.18, 0.26);
+      g.add(cloth);
+      // tie strings
+      const t1 = cyl(0.01, 0.01, 0.45, color);
+      t1.position.set(-0.18, -0.05, 0.18);
+      t1.rotation.z = 0.4;
+      g.add(t1);
+      const t2 = cyl(0.01, 0.01, 0.45, color);
+      t2.position.set(0.18, -0.05, 0.18);
+      t2.rotation.z = -0.4;
+      g.add(t2);
+      break;
+    }
+    case 'crown': {
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.32, 0.32, 0.16, 16),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.3, metalness: 0.7 })
+      );
+      base.position.y = 0.12;
+      g.add(base);
+      // 5 spikes
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const spk = new THREE.Mesh(
+          new THREE.ConeGeometry(0.06, 0.22, 6),
+          new THREE.MeshStandardMaterial({ color: accent, roughness: 0.3, metalness: 0.7 })
+        );
+        spk.position.set(Math.cos(a) * 0.28, 0.28, Math.sin(a) * 0.28);
+        g.add(spk);
+      }
+      // jewel
+      const j = sphere(0.07, 0xff3344, { rough: 0.2, metal: 0.4 });
+      j.position.set(0, 0.14, 0.32);
+      g.add(j);
+      // tilak (forehead mark)
+      const tilak = box(0.05, 0.08, 0.02, 0xc8102e);
+      tilak.position.set(0, -0.05, 0.27);
+      g.add(tilak);
+      break;
+    }
+    case 'topknot': {
+      // bun on top + hair around
+      const hair = box(0.48, 0.18, 0.4, 0xd6d6c8, { rough: 1 });
+      hair.position.y = 0.04;
+      g.add(hair);
+      const bun = sphere(0.14, 0xd6d6c8, { rough: 1 });
+      bun.position.y = 0.22;
+      g.add(bun);
+      const stick = cyl(0.02, 0.02, 0.18, 0x8b5a2b);
+      stick.position.y = 0.24;
+      stick.rotation.z = Math.PI / 2;
+      g.add(stick);
+      break;
+    }
+    case 'slick': {
+      const hair = box(0.46, 0.14, 0.4, 0x100a05, { rough: 0.4, metal: 0.2 });
+      hair.position.y = 0.06;
+      g.add(hair);
+      // a clean part
+      const part = box(0.42, 0.02, 0.06, 0xf2cfa6);
+      part.position.set(0.06, 0.13, 0);
+      part.rotation.y = -0.1;
+      g.add(part);
+      break;
+    }
+    case 'tinfoil': {
+      // crumpled silver hat
+      const h = sphere(0.34, 0xcccccc, { rough: 0.2, metal: 0.9 });
+      h.scale.set(1, 0.7, 1);
+      h.position.y = 0.12;
+      g.add(h);
+      // little crinkles
+      for (let i = 0; i < 6; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = 0.28;
+        const dot = sphere(0.05, 0xa8a8a8, { metal: 0.9, rough: 0.3 });
+        dot.position.set(Math.cos(a) * r, 0.16 + Math.random() * 0.08, Math.sin(a) * r);
+        g.add(dot);
+      }
+      // antenna
+      const ant = cyl(0.02, 0.02, 0.5, 0x888888, { metal: 0.9, rough: 0.2 });
+      ant.position.set(0.18, 0.42, 0);
+      ant.rotation.z = -0.25;
+      g.add(ant);
+      const ball = sphere(0.05, accent, { metal: 0.5, rough: 0.3 });
+      ball.position.set(0.3, 0.65, 0);
+      g.add(ball);
+      break;
+    }
+    case 'einstein': {
+      const hairColor = 0xeeeeee;
+      // wild puff
+      for (let i = 0; i < 14; i++) {
+        const tuft = sphere(0.11 + Math.random() * 0.05, hairColor, { rough: 1 });
+        const a = (i / 14) * Math.PI * 2;
+        tuft.position.set(Math.cos(a) * 0.24, 0.14 + Math.random() * 0.1, Math.sin(a) * 0.24);
+        g.add(tuft);
+      }
+      const top = sphere(0.18, hairColor, { rough: 1 });
+      top.position.y = 0.22;
+      g.add(top);
+      // goggles
+      const lensL = sphere(0.07, 0x88c8ff, { metal: 0.4, rough: 0.2 });
+      lensL.position.set(-0.11, -0.05, 0.24);
+      g.add(lensL);
+      const lensR = sphere(0.07, 0x88c8ff, { metal: 0.4, rough: 0.2 });
+      lensR.position.set(0.11, -0.05, 0.24);
+      g.add(lensR);
+      const strap = box(0.5, 0.04, 0.04, 0x222222);
+      strap.position.set(0, -0.05, 0.18);
+      g.add(strap);
+      break;
+    }
+    case 'bald': {
+      // shiny bald head (no hat)
+      break;
+    }
+    case 'vr': {
+      const hs = box(0.5, 0.2, 0.3, 0x111122, { rough: 0.3, metal: 0.4 });
+      hs.position.set(0, -0.02, 0.18);
+      g.add(hs);
+      const lens = box(0.4, 0.14, 0.02, accent, { metal: 0.7, rough: 0.15 });
+      lens.position.set(0, -0.02, 0.34);
+      g.add(lens);
+      const strap = box(0.5, 0.06, 0.5, 0x222244, { rough: 0.6 });
+      strap.position.set(0, -0.02, 0);
+      g.add(strap);
+      // glowy LED dot
+      const led = sphere(0.025, accent, { metal: 0.5 });
+      led.position.set(0.16, 0.05, 0.36);
+      g.add(led);
+      break;
+    }
+  }
+  return g;
+}
+
+function buildFacial(kind) {
+  const g = new THREE.Group();
+  switch (kind) {
+    case 'fullbeard': {
+      const beard = box(0.44, 0.35, 0.18, 0x1a1410, { rough: 1 });
+      beard.position.set(0, -0.22, 0.18);
+      g.add(beard);
+      break;
+    }
+    case 'shortbeard': {
+      const beard = box(0.42, 0.18, 0.14, 0x1a1410, { rough: 1 });
+      beard.position.set(0, -0.22, 0.2);
+      g.add(beard);
+      break;
+    }
+    case 'longbeard': {
+      const beard = box(0.34, 0.5, 0.14, 0xe8e8e0, { rough: 1 });
+      beard.position.set(0, -0.36, 0.2);
+      g.add(beard);
+      break;
+    }
+    case 'wildhair': {
+      const stache = box(0.3, 0.06, 0.08, 0xeeeeee, { rough: 1 });
+      stache.position.set(0, -0.16, 0.24);
+      g.add(stache);
+      break;
+    }
+    case 'glasses': {
+      const lensL = new THREE.Mesh(
+        new THREE.RingGeometry(0.06, 0.09, 16),
+        new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 })
+      );
+      lensL.position.set(-0.12, -0.05, 0.26);
+      g.add(lensL);
+      const lensR = lensL.clone();
+      lensR.position.set(0.12, -0.05, 0.26);
+      g.add(lensR);
+      const bridge = box(0.08, 0.02, 0.02, 0x111111);
+      bridge.position.set(0, -0.05, 0.26);
+      g.add(bridge);
+      break;
+    }
+  }
+  return g;
+}
+
+function buildEmblem(kind, color) {
+  const g = new THREE.Group();
+  switch (kind) {
+    case 'cross': {
+      const v = box(0.08, 0.42, 0.04, color, { metal: 0.6 });
+      v.position.z = 0.21;
+      g.add(v);
+      const h = box(0.26, 0.08, 0.04, color, { metal: 0.6 });
+      h.position.set(0, 0.05, 0.21);
+      g.add(h);
+      break;
+    }
+    case 'book': {
+      const b = box(0.34, 0.42, 0.08, 0x2a0a0a, { rough: 0.6 });
+      b.position.z = 0.22;
+      g.add(b);
+      const pg = box(0.32, 0.4, 0.02, 0xf4f4f4);
+      pg.position.z = 0.27;
+      g.add(pg);
+      // cross on cover
+      const c = box(0.04, 0.16, 0.005, 0xd6a737, { metal: 0.6 });
+      c.position.z = 0.28;
+      g.add(c);
+      break;
+    }
+    case 'tallit': {
+      // Vertical stripes on torso
+      const s1 = box(0.04, 0.5, 0.04, 0x2b6cb0);
+      s1.position.set(-0.1, 0, 0.21);
+      g.add(s1);
+      const s2 = box(0.04, 0.5, 0.04, 0x2b6cb0);
+      s2.position.set(0.1, 0, 0.21);
+      g.add(s2);
+      break;
+    }
+    case 'crescent': {
+      const moon = new THREE.Mesh(
+        new THREE.TorusGeometry(0.14, 0.04, 8, 16, Math.PI * 1.2),
+        new THREE.MeshStandardMaterial({ color: 0xd6a737, metalness: 0.6, roughness: 0.3 })
+      );
+      moon.position.set(0, 0.05, 0.22);
+      moon.rotation.z = -0.4;
+      g.add(moon);
+      const star = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.05),
+        new THREE.MeshStandardMaterial({ color: 0xd6a737, metalness: 0.6, roughness: 0.3 })
+      );
+      star.position.set(0.16, 0.05, 0.22);
+      g.add(star);
+      break;
+    }
+    case 'broom': {
+      // Tiny ahimsa broom slung on side
+      const handle = cyl(0.02, 0.02, 0.5, 0x8b5a2b);
+      handle.position.set(0.3, -0.1, 0.18);
+      handle.rotation.z = -0.4;
+      g.add(handle);
+      const tuft = box(0.1, 0.16, 0.06, 0xeeeeee, { rough: 1 });
+      tuft.position.set(0.42, -0.32, 0.18);
+      g.add(tuft);
+      break;
+    }
+    case 'omarms': {
+      // Two extra static arms with a lotus and a sword
+      const armL = box(0.1, 0.42, 0.1, 0x6a7eb8);
+      armL.position.set(-0.45, -0.1, 0.0);
+      armL.rotation.z = 0.45;
+      g.add(armL);
+      const lotus = sphere(0.08, 0xff8aa8, { rough: 0.5 });
+      lotus.position.set(-0.65, -0.32, 0);
+      g.add(lotus);
+
+      const armR = box(0.1, 0.42, 0.1, 0x6a7eb8);
+      armR.position.set(0.45, -0.1, 0.0);
+      armR.rotation.z = -0.45;
+      g.add(armR);
+      const sword = box(0.05, 0.36, 0.05, 0xcccccc, { metal: 0.7, rough: 0.2 });
+      sword.position.set(0.65, -0.32, 0);
+      g.add(sword);
+
+      // Om symbol on chest
+      const om = sphere(0.12, 0xd6a737, { metal: 0.6, rough: 0.3 });
+      om.position.set(0, 0.05, 0.22);
+      om.scale.set(1, 1, 0.3);
+      g.add(om);
+      break;
+    }
+    case 'yinyang': {
+      const disc = new THREE.Mesh(
+        new THREE.CircleGeometry(0.16, 32),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 })
+      );
+      disc.position.z = 0.22;
+      g.add(disc);
+      const halfDark = new THREE.Mesh(
+        new THREE.CircleGeometry(0.16, 32, 0, Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5 })
+      );
+      halfDark.position.z = 0.221;
+      g.add(halfDark);
+      const dotW = new THREE.Mesh(
+        new THREE.CircleGeometry(0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 })
+      );
+      dotW.position.set(0, 0.08, 0.222);
+      g.add(dotW);
+      const dotB = new THREE.Mesh(
+        new THREE.CircleGeometry(0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5 })
+      );
+      dotB.position.set(0, -0.08, 0.222);
+      g.add(dotB);
+      break;
+    }
+    case 'nametag': {
+      const tag = box(0.32, 0.1, 0.02, 0x111111);
+      tag.position.set(0.18, 0.15, 0.22);
+      g.add(tag);
+      const tagText = box(0.28, 0.06, 0.005, 0xffffff);
+      tagText.position.set(0.18, 0.15, 0.235);
+      g.add(tagText);
+      // tie
+      const tie = box(0.08, 0.42, 0.04, 0x1a1a1a);
+      tie.position.set(0, 0.0, 0.22);
+      g.add(tie);
+      break;
+    }
+    case 'emeter': {
+      // Two soup-can shapes on a belt
+      const canL = cyl(0.06, 0.06, 0.18, 0xc0c4d6, { metal: 0.8, rough: 0.2 });
+      canL.position.set(-0.22, -0.05, 0.22);
+      g.add(canL);
+      const canR = cyl(0.06, 0.06, 0.18, 0xc0c4d6, { metal: 0.8, rough: 0.2 });
+      canR.position.set(0.22, -0.05, 0.22);
+      g.add(canR);
+      // dial in middle
+      const dial = sphere(0.07, 0x222244, { metal: 0.6 });
+      dial.position.set(0, -0.05, 0.22);
+      g.add(dial);
+      // wires
+      const w1 = cyl(0.01, 0.01, 0.26, 0x222222);
+      w1.position.set(-0.11, -0.05, 0.22);
+      w1.rotation.z = Math.PI / 2;
+      g.add(w1);
+      const w2 = cyl(0.01, 0.01, 0.26, 0x222222);
+      w2.position.set(0.11, -0.05, 0.22);
+      w2.rotation.z = Math.PI / 2;
+      g.add(w2);
+      break;
+    }
+    case 'saucer': {
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.18, 0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0xa8a8a8, metalness: 0.7, roughness: 0.3 })
+      );
+      disc.position.set(0, 0.06, 0.22);
+      g.add(disc);
+      const dome = sphere(0.07, 0x6affd6, { metal: 0.4, rough: 0.2 });
+      dome.position.set(0, 0.1, 0.22);
+      g.add(dome);
+      break;
+    }
+    case 'beaker': {
+      const flask = cyl(0.08, 0.12, 0.22, 0x88c8ff, { rough: 0.1, metal: 0.1 });
+      flask.position.set(0, 0.0, 0.24);
+      g.add(flask);
+      const liquid = cyl(0.08, 0.11, 0.1, 0x44dd66, { rough: 0.2 });
+      liquid.position.set(0, -0.04, 0.24);
+      g.add(liquid);
+      // bubble
+      const bub = sphere(0.04, 0x44dd66, { rough: 0.2 });
+      bub.position.set(0.04, 0.08, 0.26);
+      g.add(bub);
+      break;
+    }
+    case 'redA': {
+      // A inside a circle (atheist symbol)
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.16, 0.025, 8, 24),
+        new THREE.MeshStandardMaterial({ color: 0xc8102e, roughness: 0.5 })
+      );
+      ring.position.z = 0.22;
+      g.add(ring);
+      const a1 = box(0.04, 0.22, 0.02, 0xc8102e);
+      a1.position.set(-0.05, 0, 0.22);
+      a1.rotation.z = 0.3;
+      g.add(a1);
+      const a2 = box(0.04, 0.22, 0.02, 0xc8102e);
+      a2.position.set(0.05, 0, 0.22);
+      a2.rotation.z = -0.3;
+      g.add(a2);
+      const cross = box(0.18, 0.03, 0.02, 0xc8102e);
+      cross.position.set(0, -0.02, 0.22);
+      g.add(cross);
+      break;
+    }
+    case 'circuit': {
+      // Glowing geometric pattern on chest
+      const c1 = box(0.18, 0.04, 0.01, 0x6affd6, { metal: 0.5 });
+      c1.position.set(0, 0.08, 0.22);
+      g.add(c1);
+      const c2 = box(0.04, 0.18, 0.01, 0x6affd6, { metal: 0.5 });
+      c2.position.set(0.12, 0, 0.22);
+      g.add(c2);
+      const c3 = box(0.18, 0.04, 0.01, 0x6affd6, { metal: 0.5 });
+      c3.position.set(0, -0.08, 0.22);
+      g.add(c3);
+      const node = sphere(0.04, 0x6affd6, { metal: 0.5 });
+      node.position.set(0, 0, 0.23);
+      g.add(node);
+      break;
+    }
+  }
+  return g;
+}
+
+function buildFighter(belief, side /* -1 left, +1 right */) {
+  const def = FIGHTERS[belief];
+  const group = new THREE.Group();
+
+  // Hip pivot (root)
+  const hips = box(0.5, 0.14, 0.32, def.shorts);
+  hips.position.y = 1.1;
+  group.add(hips);
+
+  // Trunks (waist line)
+  const waist = box(0.56, 0.18, 0.36, def.shorts);
+  waist.position.y = 0.95;
+  group.add(waist);
+
+  // Legs
+  function makeLeg(xOffset) {
+    const leg = new THREE.Group();
+    const thigh = box(0.18, 0.45, 0.18, def.shorts);
+    thigh.position.y = -0.22;
+    leg.add(thigh);
+    const knee = sphere(0.1, def.skin);
+    knee.position.y = -0.45;
+    leg.add(knee);
+    const shin = box(0.16, 0.45, 0.16, def.skin);
+    shin.position.y = -0.7;
+    leg.add(shin);
+    const boot = box(0.22, 0.16, 0.34, 0x111111, { rough: 0.6 });
+    boot.position.set(0, -0.96, 0.04);
+    leg.add(boot);
+    leg.position.set(xOffset, 0.85, 0);
+    group.add(leg);
+    return leg;
+  }
+  const legL = makeLeg(-0.13);
+  const legR = makeLeg(0.13);
+
+  // Torso
+  const torso = box(0.62, 0.7, 0.4, def.robe);
+  torso.position.y = 1.5;
+  group.add(torso);
+
+  // Trim line at top of trunks
+  const trimLine = box(0.66, 0.04, 0.42, def.accent, { metal: 0.3 });
+  trimLine.position.y = 1.17;
+  group.add(trimLine);
+
+  // Emblem on chest
+  const emblem = buildEmblem(def.emblem, def.accent);
+  emblem.position.y = 1.5;
+  group.add(emblem);
+
+  // Neck
+  const neck = cyl(0.09, 0.1, 0.14, def.skin);
+  neck.position.y = 1.92;
+  group.add(neck);
+
+  // Head
+  const headGroup = new THREE.Group();
+  headGroup.position.y = 2.15;
+  group.add(headGroup);
+
+  const head = box(0.44, 0.46, 0.4, def.skin);
+  headGroup.add(head);
+
+  // Eyes
+  const eyeL = sphere(0.05, 0xffffff);
+  eyeL.position.set(-0.1, 0.05, 0.21);
+  headGroup.add(eyeL);
+  const eyeR = sphere(0.05, 0xffffff);
+  eyeR.position.set(0.1, 0.05, 0.21);
+  headGroup.add(eyeR);
+  const pupilL = sphere(0.025, 0x111111);
+  pupilL.position.set(-0.1, 0.05, 0.245);
+  headGroup.add(pupilL);
+  const pupilR = sphere(0.025, 0x111111);
+  pupilR.position.set(0.1, 0.05, 0.245);
+  headGroup.add(pupilR);
+
+  // Mouth
+  const mouth = box(0.18, 0.025, 0.02, 0x4a2418);
+  mouth.position.set(0, -0.13, 0.22);
+  headGroup.add(mouth);
+
+  // Facial features
+  const facial = buildFacial(def.facial);
+  headGroup.add(facial);
+
+  // Head prop
+  const headProp = buildHeadProp(def.head, def.robe, def.accent);
+  headProp.position.y = 0.3;
+  headGroup.add(headProp);
+
+  // Arms — these are pivoted at the shoulder for animation
+  function makeArm(xOffset) {
+    const arm = new THREE.Group();
+    arm.position.set(xOffset, 1.78, 0);
+
+    const upper = box(0.18, 0.42, 0.18, def.robe);
+    upper.position.y = -0.21;
+    arm.add(upper);
+
+    const elbow = sphere(0.11, def.skin);
+    elbow.position.y = -0.42;
+    arm.add(elbow);
+
+    const forearm = box(0.16, 0.38, 0.16, def.skin);
+    forearm.position.y = -0.62;
+    arm.add(forearm);
+
+    const glove = sphere(0.18, 0xc8102e, { rough: 0.6 });
+    glove.position.y = -0.86;
+    arm.add(glove);
+
+    return arm;
+  }
+  const armL = makeArm(-0.4);
+  const armR = makeArm(0.4);
+  group.add(armL);
+  group.add(armR);
+
+  // Place + face center
+  group.position.set(side * 1.8, 0, 0);
+  group.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+
+  return {
+    group, hips, torso, headGroup, armL, armR, legL, legR,
+    side, belief,
+    // Animation state
+    state: 'idle',
+    stateTimer: 0,
+    hp: 100,
+    bobPhase: Math.random() * Math.PI * 2,
+    facing: side > 0 ? -Math.PI / 2 : Math.PI / 2,
+  };
+}
+
+/* ============================================================
+   RING GIRL
+   ============================================================ */
+let ringGirl = null;
+function buildRingGirl() {
+  const g = new THREE.Group();
+
+  // Legs
+  const leg1 = box(0.16, 0.7, 0.16, 0xf2cfa6);
+  leg1.position.set(-0.08, 0.5, 0);
+  g.add(leg1);
+  const leg2 = box(0.16, 0.7, 0.16, 0xf2cfa6);
+  leg2.position.set(0.08, 0.5, 0);
+  g.add(leg2);
+  const shoe1 = box(0.2, 0.08, 0.28, 0xc8102e);
+  shoe1.position.set(-0.08, 0.12, 0.04);
+  g.add(shoe1);
+  const shoe2 = box(0.2, 0.08, 0.28, 0xc8102e);
+  shoe2.position.set(0.08, 0.12, 0.04);
+  g.add(shoe2);
+
+  // Dress
+  const dress = box(0.55, 0.7, 0.36, 0xd6a737);
+  dress.position.set(0, 1.1, 0);
+  g.add(dress);
+  const trim = box(0.6, 0.04, 0.4, 0xffffff);
+  trim.position.set(0, 0.76, 0);
+  g.add(trim);
+
+  // Torso top
+  const top = box(0.42, 0.4, 0.3, 0xc8102e);
+  top.position.set(0, 1.65, 0);
+  g.add(top);
+  const sash = box(0.46, 0.08, 0.34, 0xffffff);
+  sash.position.set(0, 1.5, 0);
+  g.add(sash);
+
+  // Neck/head
+  const neck = cyl(0.08, 0.1, 0.12, 0xf2cfa6);
+  neck.position.set(0, 1.95, 0);
+  g.add(neck);
+
+  const head = new THREE.Group();
+  head.position.set(0, 2.18, 0);
+  const headBox = box(0.42, 0.44, 0.38, 0xf2cfa6);
+  head.add(headBox);
+  // hair (cascading)
+  const hair = box(0.5, 0.5, 0.4, 0x8b4a25);
+  hair.position.set(0, 0.05, -0.05);
+  head.add(hair);
+  // bow
+  const bow = box(0.18, 0.1, 0.06, 0xc8102e);
+  bow.position.set(0.18, 0.18, 0.0);
+  head.add(bow);
+  // eyes
+  const e1 = sphere(0.04, 0x111111);
+  e1.position.set(-0.09, 0.02, 0.2);
+  head.add(e1);
+  const e2 = sphere(0.04, 0x111111);
+  e2.position.set(0.09, 0.02, 0.2);
+  head.add(e2);
+  // lips
+  const lips = box(0.14, 0.025, 0.02, 0xc8102e);
+  lips.position.set(0, -0.13, 0.2);
+  head.add(lips);
+  g.add(head);
+
+  // Arms (one will hold up the card)
+  const armL = new THREE.Group();
+  armL.position.set(-0.24, 1.78, 0);
+  const upL = box(0.12, 0.42, 0.12, 0xf2cfa6);
+  upL.position.y = -0.21;
+  armL.add(upL);
+  const foL = box(0.1, 0.4, 0.1, 0xf2cfa6);
+  foL.position.y = -0.6;
+  armL.add(foL);
+  g.add(armL);
+
+  const armR = new THREE.Group();
+  armR.position.set(0.24, 1.78, 0);
+  const upR = box(0.12, 0.42, 0.12, 0xf2cfa6);
+  upR.position.y = -0.21;
+  armR.add(upR);
+  const foR = box(0.1, 0.4, 0.1, 0xf2cfa6);
+  foR.position.y = -0.6;
+  armR.add(foR);
+  g.add(armR);
+
+  // Card (held above head when raised)
+  const card = new THREE.Group();
+  const cardBack = box(1.4, 0.96, 0.06, 0xfff7df);
+  card.add(cardBack);
+  const cardBorder = box(1.42, 0.04, 0.08, 0xc8102e);
+  cardBorder.position.y = 0.48;
+  card.add(cardBorder);
+  // "1" or text would be on a canvas texture; here we just show a stylized card
+  const cardCanvas = document.createElement('canvas');
+  cardCanvas.width = 512; cardCanvas.height = 360;
+  const cctx = cardCanvas.getContext('2d');
+  cctx.fillStyle = '#fff7df';
+  cctx.fillRect(0, 0, 512, 360);
+  cctx.strokeStyle = '#1a1a1a';
+  cctx.lineWidth = 8;
+  cctx.strokeRect(8, 8, 496, 344);
+  cctx.fillStyle = '#c8102e';
+  cctx.font = 'bold 64px sans-serif';
+  cctx.textAlign = 'center';
+  cctx.fillText('VERDICT', 256, 90);
+  cctx.fillStyle = '#1a1a1a';
+  cctx.font = 'bold 110px serif';
+  cctx.fillText('K.O.', 256, 220);
+  cctx.font = '28px sans-serif';
+  cctx.fillStyle = '#888';
+  cctx.fillText('SEE NOTECARD', 256, 300);
+  const cardTex = new THREE.CanvasTexture(cardCanvas);
+  const cardFace = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.36, 0.92),
+    new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.85 })
+  );
+  cardFace.position.z = 0.04;
+  card.add(cardFace);
+
+  // Card starts in her right hand, lowered
+  card.position.set(0.4, 1.5, 0);
+  g.add(card);
+
+  g.position.set(0, 0, 6); // far behind ring initially
+  g.scale.set(0.95, 0.95, 0.95);
+  g.visible = false;
+
+  scene.add(g);
+  return { group: g, head, armL, armR, card };
+}
+ringGirl = buildRingGirl();
+
+/* ============================================================
+   ANIMATION / BOUT LOGIC
+   ============================================================ */
+const clock = new THREE.Clock();
+let fighters = []; // [fighter1, fighter2]
+let bout = null;   // { startTime, endTime, winner, loser, move, quip, events: [...] }
+
+// Animation state per fighter:
+//   'idle' (bouncing), 'jab' (quick left punch), 'cross' (right punch),
+//   'hook' (looping side punch), 'block' (arms up), 'stagger' (rocked back),
+//   'ko' (lying on the mat), 'victory' (arms up celebrating)
+
+function setFighterState(f, state, opts = {}) {
+  f.state = state;
+  f.stateTimer = 0;
+  f.stateOpts = opts;
+}
+
+function updateFighter(f, t, dt) {
+  const g = f.group;
+  const phase = t * 4 + f.bobPhase;
+
+  // Default arm rest positions (relative to shoulder)
+  const restL = { rx: 1.4, rz: 0.3 };
+  const restR = { rx: 1.4, rz: -0.3 };
+
+  let targetArmL = { ...restL };
+  let targetArmR = { ...restR };
+  let bodyTilt = 0;
+  let bobY = 0;
+  let bodyZ = 0;
+  let bodyRot = 0;
+
+  switch (f.state) {
+    case 'idle': {
+      // Bounce + sway
+      bobY = Math.sin(phase) * 0.04;
+      bodyTilt = Math.sin(phase * 0.5) * 0.03;
+      // Guard up slightly
+      targetArmL = { rx: 1.1, rz: 0.5 };
+      targetArmR = { rx: 1.1, rz: -0.5 };
+      break;
+    }
+    case 'jab': {
+      // Quick left punch forward (toward opponent = -z in local space since they face -z)
+      const t0 = f.stateTimer / 0.3;
+      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const extend = Math.max(0, Math.min(1, e));
+      targetArmL = { rx: -0.2 - extend * 1.0, rz: 0.1 };
+      targetArmR = { rx: 1.1, rz: -0.5 };
+      bodyZ = -extend * 0.15;
+      if (f.stateTimer > 0.35) setFighterState(f, 'idle');
+      break;
+    }
+    case 'cross': {
+      const t0 = f.stateTimer / 0.35;
+      const e = t0 < 0.35 ? t0 / 0.35 : 1 - (t0 - 0.35) / 0.65;
+      const extend = Math.max(0, Math.min(1, e));
+      targetArmR = { rx: -0.2 - extend * 1.0, rz: -0.05 };
+      targetArmL = { rx: 1.0, rz: 0.4 };
+      bodyZ = -extend * 0.2;
+      bodyRot = extend * 0.15;
+      if (f.stateTimer > 0.45) setFighterState(f, 'idle');
+      break;
+    }
+    case 'hook': {
+      const t0 = f.stateTimer / 0.4;
+      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const extend = Math.max(0, Math.min(1, e));
+      targetArmR = { rx: 0.3, rz: -1.0 - extend * 0.4 };
+      targetArmL = { rx: 1.1, rz: 0.4 };
+      bodyRot = extend * 0.3;
+      bodyZ = -extend * 0.1;
+      if (f.stateTimer > 0.55) setFighterState(f, 'idle');
+      break;
+    }
+    case 'block': {
+      targetArmL = { rx: -0.3, rz: 0.3 };
+      targetArmR = { rx: -0.3, rz: -0.3 };
+      bodyZ = 0.08;
+      if (f.stateTimer > 0.4) setFighterState(f, 'idle');
+      break;
+    }
+    case 'stagger': {
+      const k = Math.min(1, f.stateTimer / 0.25);
+      bodyTilt = -0.4 * (1 - Math.abs(k - 0.5) * 2);
+      bodyZ = 0.3 * k;
+      targetArmL = { rx: 0.6, rz: 0.7 };
+      targetArmR = { rx: 0.6, rz: -0.7 };
+      if (f.stateTimer > 0.5) setFighterState(f, 'idle');
+      break;
+    }
+    case 'ko': {
+      // Lay down (flat on back)
+      const k = Math.min(1, f.stateTimer / 1.2);
+      g.position.y = -k * 0.0;
+      // Pin the fighter, rotate to lay flat
+      const targetTilt = -Math.PI / 2;
+      // We use bodyTilt slot to drive torso tilt (but here we tilt the entire group)
+      g.rotation.x = targetTilt * k;
+      // Slide back slightly when falling
+      g.position.z = (f.koZ ?? 0) - k * 0.6;
+      // Arms splay
+      targetArmL = { rx: 0.2, rz: 1.2 };
+      targetArmR = { rx: 0.2, rz: -1.2 };
+      break;
+    }
+    case 'victory': {
+      // Arms up celebrating
+      targetArmL = { rx: -2.2, rz: 0.5 };
+      targetArmR = { rx: -2.2, rz: -0.5 };
+      bobY = Math.abs(Math.sin(phase * 1.5)) * 0.18;
+      break;
+    }
+  }
+
+  // Apply arm rotations (smooth lerp)
+  f.armL.rotation.x = THREE.MathUtils.lerp(f.armL.rotation.x, targetArmL.rx, 0.45);
+  f.armL.rotation.z = THREE.MathUtils.lerp(f.armL.rotation.z, targetArmL.rz, 0.45);
+  f.armR.rotation.x = THREE.MathUtils.lerp(f.armR.rotation.x, targetArmR.rx, 0.45);
+  f.armR.rotation.z = THREE.MathUtils.lerp(f.armR.rotation.z, targetArmR.rz, 0.45);
+
+  // Body bob (only when not in KO state)
+  // bodyZ is the fighter's local-forward lean (negative = leaning toward opponent).
+  // In world space, that corresponds to motion along the x-axis (the fighters face each other on x).
+  // Left fighter (side=-1) faces +x; right fighter (side=+1) faces -x. facing = -f.side.
+  if (f.state !== 'ko') {
+    const facing = -f.side;
+    g.position.y = bobY;
+    g.position.x = f.side * 1.8 + (-bodyZ) * facing;
+    g.position.z = 0;
+    g.rotation.x = 0;
+    f.torso.rotation.z = bodyTilt;
+    f.torso.rotation.y = bodyRot;
+    f.headGroup.rotation.z = bodyTilt * 0.5;
+  }
+
+  f.stateTimer += dt;
+}
+
+/* ----- Audio (synthesized) ----- */
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playBell() {
+  ensureAudio();
+  triggerBellSwing(1.0);
+  const t = audioCtx.currentTime;
+  // Multiple sine partials for a bell-like timbre
+  const partials = [
+    { f: 520, a: 0.4, d: 1.8 },
+    { f: 780, a: 0.25, d: 1.4 },
+    { f: 1100, a: 0.18, d: 1.1 },
+    { f: 1640, a: 0.12, d: 0.7 },
+  ];
+  partials.forEach(p => {
+    const o = audioCtx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = p.f;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(p.a, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + p.d);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(t);
+    o.stop(t + p.d);
+  });
+}
+function playPunch(power = 1) {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Low thud
+  const o = audioCtx.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(180 * power, t);
+  o.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.3 * power, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(t);
+  o.stop(t + 0.2);
+
+  // Noise crack
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  const n = audioCtx.createBufferSource();
+  n.buffer = buf;
+  const ng = audioCtx.createGain();
+  ng.gain.value = 0.18 * power;
+  n.connect(ng).connect(audioCtx.destination);
+  n.start(t);
+}
+function playCrowd() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.4, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const env = Math.min(1, i / 6000) * Math.min(1, (data.length - i) / 6000);
+    data[i] = (Math.random() * 2 - 1) * env * 0.25;
+  }
+  const n = audioCtx.createBufferSource();
+  n.buffer = buf;
+  const g = audioCtx.createGain();
+  g.gain.value = 0.45;
+  // band-pass to roar
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 600;
+  bp.Q.value = 0.7;
+  n.connect(bp).connect(g).connect(audioCtx.destination);
+  n.start(t);
+}
+
+/* ----- Bout Choreography ----- */
+function planBout(b1, b2) {
+  const key = mkKey(b1, b2);
+  const match = MATCHUPS[key];
+  if (!match) {
+    return {
+      winner: b1, loser: b2,
+      move: 'an inconclusive shrug',
+      quip: 'A schism was declared. Both fighters went home to write differently-worded essays about it.',
+    };
+  }
+  const winner = match.winner;
+  const loser = (winner === b1) ? b2 : b1;
+  return { winner, loser, move: match.move, quip: match.quip };
+}
+
+function generateEvents(durationS, winnerIsRight) {
+  // Generate a sequence of punches/dodges over the duration.
+  // Winner lands more punches; loser staggers at the end.
+  const events = [];
+  let t = 1.0;
+  while (t < durationS - 3.0) {
+    const winnerAttacks = Math.random() < 0.65;
+    const attacker = winnerAttacks ? 'winner' : 'loser';
+    const defender = winnerAttacks ? 'loser' : 'winner';
+    const moveRoll = Math.random();
+    const move = moveRoll < 0.45 ? 'jab' : moveRoll < 0.78 ? 'cross' : 'hook';
+    events.push({ t, type: 'attack', attacker, defender, move, lands: winnerAttacks || Math.random() < 0.5 });
+    t += 0.55 + Math.random() * 0.7;
+  }
+  // Final stagger + finishing move at the end
+  events.push({ t: durationS - 2.6, type: 'attack', attacker: 'winner', defender: 'loser', move: 'cross', lands: true, big: true });
+  events.push({ t: durationS - 2.2, type: 'stagger', who: 'loser' });
+  events.push({ t: durationS - 1.6, type: 'attack', attacker: 'winner', defender: 'loser', move: 'hook', lands: true, finisher: true });
+  events.push({ t: durationS - 1.2, type: 'ko', who: 'loser' });
+  events.push({ t: durationS - 0.6, type: 'victory', who: 'winner' });
+  return events;
+}
+
+function clearFighters() {
+  fighters.forEach(f => scene.remove(f.group));
+  fighters = [];
+}
+
+function startBout(b1, b2) {
+  clearFighters();
+  // Hide notecard / replay
+  document.getElementById('notecard-wrap').classList.remove('show');
+  document.getElementById('replay').classList.remove('show');
+  document.getElementById('fighter-tags').classList.add('show');
+  document.getElementById('timer').classList.add('show');
+
+  // Spawn fighters
+  const f1 = buildFighter(b1, -1); // left/blue
+  const f2 = buildFighter(b2, 1);  // right/red
+  scene.add(f1.group);
+  scene.add(f2.group);
+  fighters = [f1, f2];
+
+  // Tag display
+  document.getElementById('tag1').textContent = b1.toUpperCase();
+  document.getElementById('tag2').textContent = b2.toUpperCase();
+
+  // Move ring girl off-stage
+  ringGirl.group.visible = false;
+  ringGirl.group.position.set(0, 0, 7);
+  ringGirl.armL.rotation.set(0, 0, 0);
+  ringGirl.armR.rotation.set(0, 0, 0);
+  ringGirl.card.position.set(0.4, 1.5, 0);
+
+  // Plan bout
+  const plan = planBout(b1, b2);
+  const winnerIsB1 = plan.winner === b1;
+  const winnerFighter = winnerIsB1 ? f1 : f2;
+  const loserFighter = winnerIsB1 ? f2 : f1;
+
+  const duration = 28 + Math.random() * 3; // ~28-31s of action
+  const events = generateEvents(duration, !winnerIsB1);
+
+  bout = {
+    startTime: clock.getElapsedTime(),
+    duration,
+    winner: winnerFighter,
+    loser: loserFighter,
+    winnerName: plan.winner,
+    loserName: plan.loser,
+    move: plan.move,
+    quip: plan.quip,
+    events,
+    eventIdx: 0,
+    state: 'fighting',
+    finalShown: false,
+  };
+
+  // Round 1 banner
+  const ri = document.getElementById('round-info');
+  ri.textContent = 'ROUND 1';
+  ri.classList.remove('show');
+  void ri.offsetWidth;
+  ri.classList.add('show');
+
+  // Bell + crowd
+  playBell();
+  setTimeout(playBell, 280);
+  setTimeout(playCrowd, 350);
+
+  // Disable button until bout finishes
+  document.getElementById('ringbell').disabled = true;
+  document.getElementById('ringbell').textContent = 'FIGHTING…';
+}
+
+function endBout() {
+  if (!bout) return;
+  bout.state = 'verdict';
+  document.getElementById('timer').classList.remove('show');
+
+  // Final bell
+  playBell();
+  setTimeout(playBell, 220);
+
+  // Show ring girl walking in
+  ringGirl.group.visible = true;
+  ringGirl.group.position.set(0, 0, 7);
+  ringGirl.entryStart = clock.getElapsedTime();
+
+  // Populate notecard
+  const winnerName = bout.winnerName;
+  const loserName = bout.loserName;
+  const move = bout.move;
+  const quip = bout.quip;
+  document.getElementById('nc-winner').textContent =
+    `${winnerName.toUpperCase()} defeats ${loserName.toUpperCase()}`;
+  document.getElementById('nc-move').textContent =
+    `Winning move: ${move}.`;
+  document.getElementById('nc-quip').textContent = `“${quip}”`;
+
+  // Reveal card after the ring girl finishes walking + raising
+  setTimeout(() => {
+    document.getElementById('notecard-wrap').classList.add('show');
+    document.getElementById('replay').classList.add('show');
+    document.getElementById('ringbell').disabled = false;
+    document.getElementById('ringbell').textContent = 'RING THE BELL';
+  }, 3400);
+}
+
+/* ----- Per-frame update ----- */
+function updateBout(t, dt) {
+  if (!bout) return;
+  const elapsed = t - bout.startTime;
+
+  // Update timer display
+  const remaining = Math.max(0, Math.ceil(bout.duration - elapsed));
+  document.getElementById('timer').textContent = remaining;
+
+  // Process scheduled events
+  while (bout.eventIdx < bout.events.length && bout.events[bout.eventIdx].t <= elapsed) {
+    const ev = bout.events[bout.eventIdx];
+    handleEvent(ev);
+    bout.eventIdx++;
+  }
+
+  // End-of-bout transition
+  if (bout.state === 'fighting' && elapsed >= bout.duration) {
+    endBout();
+  }
+
+  // Animate ring girl entry + card raise
+  if (bout.state === 'verdict' && ringGirl.entryStart != null) {
+    const e = t - ringGirl.entryStart;
+    // Walk from z=7 to z=2 over 2 seconds
+    const walkT = Math.min(1, e / 2.0);
+    const eased = walkT * walkT * (3 - 2 * walkT);
+    ringGirl.group.position.z = 7 - eased * 5; // ends at 2
+    // bob legs slightly
+    ringGirl.group.position.y = Math.abs(Math.sin(e * 7)) * 0.06 * (1 - walkT);
+    // After walk, raise card
+    if (e > 1.9) {
+      const rT = Math.min(1, (e - 1.9) / 1.0);
+      const re = rT * rT * (3 - 2 * rT);
+      // Right arm rotates up, card follows
+      ringGirl.armR.rotation.x = -re * 2.6;
+      ringGirl.card.position.set(0.1, 1.5 + re * 1.4, -0.2 + re * 0.3);
+      ringGirl.card.rotation.z = re * 0.1;
+    }
+  }
+}
+
+function handleEvent(ev) {
+  if (!bout) return;
+  const winner = bout.winner;
+  const loser = bout.loser;
+
+  if (ev.type === 'attack') {
+    const att = ev.attacker === 'winner' ? winner : loser;
+    const def = ev.defender === 'winner' ? winner : loser;
+    setFighterState(att, ev.move);
+    if (ev.lands) {
+      // small recoil on defender
+      setTimeout(() => {
+        if (def.state !== 'ko') {
+          // Brief flinch via stagger-lite
+          def.bobPhase += 1.3;
+          // Tiny push back
+          // (No direct position change; idle bob covers it)
+        }
+      }, 180);
+      setTimeout(() => playPunch(ev.big || ev.finisher ? 1.6 : 1.0), 200);
+    }
+  } else if (ev.type === 'stagger') {
+    const who = ev.who === 'winner' ? winner : loser;
+    setFighterState(who, 'stagger');
+    setTimeout(playCrowd, 200);
+  } else if (ev.type === 'ko') {
+    const who = ev.who === 'winner' ? winner : loser;
+    who.koZ = who.group.position.z;
+    setFighterState(who, 'ko');
+    playPunch(2.0);
+    setTimeout(playCrowd, 100);
+  } else if (ev.type === 'victory') {
+    const who = ev.who === 'winner' ? winner : loser;
+    setFighterState(who, 'victory');
+  }
+}
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const dt = Math.min(0.05, clock.getDelta());
+
+  // Update audience sway
+  audience.children.forEach(c => {
+    c.position.y = c.userData.baseY + Math.sin(t * 2.5 + c.userData.basePhase) * 0.04;
+  });
+
+  // Brass bell swing — damped oscillation; clapper lags for clang feel
+  if (bellSwingEnergy > 0.005) {
+    bellSwingTime += dt;
+    bellSwingEnergy *= Math.pow(0.35, dt); // decay
+    const swing = Math.sin(bellSwingTime * 16) * bellSwingEnergy * 0.55;
+    brassBell.pivot.rotation.z = swing;
+    // Clapper offset (phase-lagged) — gives the impression of an inner clapper striking the walls
+    brassBell.clapperBall.position.x = Math.sin(bellSwingTime * 16 + 1.1) * bellSwingEnergy * 0.18;
+  } else {
+    brassBell.pivot.rotation.z *= 0.9;
+    brassBell.clapperBall.position.x *= 0.9;
+  }
+
+  // Update fighters
+  fighters.forEach(f => updateFighter(f, t, dt));
+
+  // Update bout
+  if (bout) updateBout(t, dt);
+
+  // Subtle camera sway
+  camera.position.x = Math.sin(t * 0.1) * 0.3;
+  camera.lookAt(0, 1.5, 0);
+
+  renderer.render(scene, camera);
+}
+
+/* ============================================================
+   UI WIRING
+   ============================================================ */
+function buildDropdown(wrapId, initial) {
+  const wrap = document.getElementById(wrapId);
+  const trigger = wrap.querySelector('.dropdown-trigger');
+  const valueEl = wrap.querySelector('.dropdown-value');
+  const list = wrap.querySelector('.dropdown-list');
+  wrap.dataset.value = initial;
+  valueEl.textContent = initial;
+
+  BELIEFS.forEach(b => {
+    const li = document.createElement('li');
+    li.textContent = b;
+    li.dataset.value = b;
+    if (b === initial) li.classList.add('selected');
+    li.addEventListener('click', (e) => {
+      e.stopPropagation();
+      wrap.dataset.value = b;
+      valueEl.textContent = b;
+      list.querySelectorAll('li').forEach(x => x.classList.remove('selected'));
+      li.classList.add('selected');
+      wrap.classList.remove('open');
+    });
+    list.appendChild(li);
+  });
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.dropdown.open').forEach(d => {
+      if (d !== wrap) d.classList.remove('open');
+    });
+    wrap.classList.toggle('open');
+  });
+}
+
+buildDropdown('fighter1-dropdown', 'Catholicism');
+buildDropdown('fighter2-dropdown', 'Science');
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+});
+// Also close on Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+function getPickedBeliefs() {
+  return [
+    document.getElementById('fighter1-dropdown').dataset.value,
+    document.getElementById('fighter2-dropdown').dataset.value,
+  ];
+}
+
+document.getElementById('ringbell').addEventListener('click', () => {
+  ensureAudio();
+  let [b1, b2] = getPickedBeliefs();
+  if (b1 === b2) {
+    // Same-vs-same: pick a random different one for B2
+    const others = BELIEFS.filter(x => x !== b1);
+    b2 = others[Math.floor(Math.random() * others.length)];
+    // Reflect in the UI
+    const wrap = document.getElementById('fighter2-dropdown');
+    wrap.dataset.value = b2;
+    wrap.querySelector('.dropdown-value').textContent = b2;
+    wrap.querySelectorAll('.dropdown-list li').forEach(li => {
+      li.classList.toggle('selected', li.dataset.value === b2);
+    });
+  }
+  startBout(b1, b2);
+});
+
+document.getElementById('replay').addEventListener('click', () => {
+  document.getElementById('notecard-wrap').classList.remove('show');
+  document.getElementById('replay').classList.remove('show');
+  const [b1, b2] = getPickedBeliefs();
+  startBout(b1, b2);
+});
+
+// Friendly idle preview: build two placeholder fighters
+function showIdleDemo() {
+  const f1 = buildFighter('Catholicism', -1);
+  const f2 = buildFighter('Science', 1);
+  scene.add(f1.group);
+  scene.add(f2.group);
+  fighters = [f1, f2];
+  document.getElementById('tag1').textContent = 'CATHOLICISM';
+  document.getElementById('tag2').textContent = 'SCIENCE';
+  document.getElementById('fighter-tags').classList.add('show');
+}
+showIdleDemo();
+
+animate();
+</script>
+</body>
+</html>
