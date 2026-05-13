@@ -236,6 +236,86 @@
     z-index: 30;
     letter-spacing: 0.04em;
   }
+
+  /* Big move-name banner that flashes during each turn */
+  #move-banner {
+    position: fixed;
+    top: 36%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(36px, 7vw, 78px);
+    color: #fff;
+    text-shadow: 3px 3px 0 #c8102e, 6px 6px 0 #000;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 28;
+    letter-spacing: 0.04em;
+    text-align: center;
+    text-transform: uppercase;
+    line-height: 1;
+    max-width: 86vw;
+    white-space: nowrap;
+  }
+  #move-banner.show { animation: movePop 1.2s ease-out forwards; }
+  @keyframes movePop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-3deg); }
+    14%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18) rotate(2deg); }
+    28%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0) rotate(-1deg); }
+    78%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05) rotate(0); }
+  }
+
+  /* HP bars for each fighter (visible only during the bout) */
+  #hp-bars {
+    position: fixed;
+    top: calc(118px + var(--safe-top));
+    left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 calc(28px + var(--safe-right)) 0 calc(28px + var(--safe-left));
+    z-index: 26;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    gap: 12px;
+  }
+  #hp-bars.show { opacity: 1; }
+  .hp-row { width: 40%; max-width: 380px; }
+  .hp-row .hp-name {
+    font-family: 'Bungee', sans-serif;
+    color: var(--gold);
+    font-size: clamp(12px, 1.4vw, 18px);
+    letter-spacing: 0.1em;
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 4px;
+  }
+  .hp-row.right .hp-name { text-align: right; }
+  .hp-bar-shell {
+    height: 22px;
+    background: #1a1a1a;
+    border: 3px solid #1a1a1a;
+    box-shadow: 3px 3px 0 #000, inset 0 0 0 2px #000;
+    position: relative;
+    overflow: hidden;
+  }
+  .hp-bar-fill {
+    height: 100%;
+    width: 100%;
+    transition: width 0.45s cubic-bezier(.22,1,.36,1);
+  }
+  .hp-row.left  .hp-bar-shell { border-color: #2b6cb0; }
+  .hp-row.right .hp-bar-shell { border-color: #c8102e; }
+  .hp-row.left  .hp-bar-fill  { background: linear-gradient(to right, #2b6cb0, #6affc8); }
+  .hp-row.right .hp-bar-fill  { background: linear-gradient(to right, #c8102e, #ffb27a); }
+  /* Right-side bar drains from the right edge */
+  .hp-row.right .hp-bar-shell { display: flex; justify-content: flex-end; }
+  .hp-row.right .hp-bar-fill  { background: linear-gradient(to left, #c8102e, #ffb27a); }
+  @media (max-width: 760px) {
+    #hp-bars { top: calc(96px + var(--safe-top)); padding: 0 10px; gap: 8px; }
+    .hp-bar-shell { height: 16px; border-width: 2px; box-shadow: 2px 2px 0 #000; }
+    .hp-row .hp-name { font-size: 11px; margin-bottom: 2px; }
+  }
   #round-info.show {
     animation: pop 1.2s ease-out forwards;
   }
@@ -577,6 +657,17 @@
 
 <div id="timer">30</div>
 <div id="round-info"></div>
+<div id="move-banner"></div>
+<div id="hp-bars">
+  <div class="hp-row left">
+    <div class="hp-name" id="hp-name-1">—</div>
+    <div class="hp-bar-shell"><div class="hp-bar-fill" id="hp-fill-1"></div></div>
+  </div>
+  <div class="hp-row right">
+    <div class="hp-name" id="hp-name-2">—</div>
+    <div class="hp-bar-shell"><div class="hp-bar-fill" id="hp-fill-2"></div></div>
+  </div>
+</div>
 
 <div id="fighter-tags">
   <div class="fighter-tag left"><span class="corner">BLUE CORNER</span><span id="tag1">—</span></div>
@@ -2893,6 +2984,72 @@ function buildOutfitLayer(belief, def) {
 }
 
 // Religious symbol floating behind/above each fighter — clearest ID badge
+// Shared per-belief move names + glyphs + beam colors used by both the aura
+// sprite and the beam projectile system
+const SYMBOL_GLYPH = {
+  'Catholicism':       '✝',
+  'Protestantism':     '📖',
+  'Orthodox Judaism':  '✡',
+  'Islam':             '☪',
+  'Jainism':           '🕉',
+  'Hinduism':          'ॐ',
+  'Taoism':            '☯',
+  'Mormonism':         '🅼',
+  'Scientology':       '⚔',
+  'UFO-ology':         '🛸',
+  'Science':           '⚛',
+  'Atheism':           'Ⓐ',
+  'Techno-Utopiaism':  '⚙',
+};
+
+const BEAM_COLOR = {
+  'Catholicism':       '#f0c958',
+  'Protestantism':     '#fafafa',
+  'Orthodox Judaism':  '#2b6cb0',
+  'Islam':             '#14823a',
+  'Jainism':           '#f2a93a',
+  'Hinduism':          '#f2832a',
+  'Taoism':            '#a8a8b0',
+  'Mormonism':         '#fafafa',
+  'Scientology':       '#c0c4d6',
+  'UFO-ology':         '#6affd6',
+  'Science':           '#2b8cd6',
+  'Atheism':           '#c8102e',
+  'Techno-Utopiaism':  '#6affd6',
+};
+
+const MOVE_NAMES = {
+  'Catholicism':       ['PAPAL DECREE!', 'INFALLIBILITY!', "PETER'S KEYS!", 'INDULGENCE STRIKE!', 'EXCOMMUNICATE!'],
+  'Protestantism':     ['95 THESES!', 'SOLA SCRIPTURA!', 'REFORMATION!', 'JUSTIFIED BY FAITH!', 'CALVIN STRIKE!'],
+  'Orthodox Judaism':  ['TALMUDIC TANGENT!', 'COVENANT BEAM!', 'KOSHER K.O.!', 'CHOSEN STRIKE!', 'TIKKUN OLAM!'],
+  'Islam':             ['FIVE PILLARS!', 'AYAH BARRAGE!', 'SUBMISSION!', 'BISMILLAH BLAST!', 'UMMAH STRIKE!'],
+  'Jainism':           ['AHIMSA WAVE!', 'KEVALA GAZE!', 'ANEKĀNTAVĀDA!', 'GENTLE REFUSAL!', 'COMPASSION BURST!'],
+  'Hinduism':          ['VEDIC FLURRY!', 'OM RESONANCE!', 'BRAHMAN PULSE!', 'DHARMA STRIKE!', 'MĀYĀ ILLUSION!'],
+  'Taoism':            ['WUWEI WAVE!', 'TAO FLOW!', 'EMPTY-FORM!', 'WATER STRIKE!', 'BALANCE BLAST!'],
+  'Mormonism':         ['GOLDEN PLATES!', 'CELESTIAL BEAM!', 'MISSIONARY ZEAL!', 'TEMPLE WAVE!', 'MORONI STRIKE!'],
+  'Scientology':       ['AUDITING LASER!', 'THETAN BLAST!', 'E-METER PULSE!', 'CLEAR STRIKE!', "XENU'S WRATH!"],
+  'UFO-ology':         ['ANCIENT ALIENS!', 'ABDUCTION BEAM!', 'TINFOIL DISCHARGE!', 'CROP CIRCLE!', 'GREY INVASION!'],
+  'Science':           ['PEER REVIEW!', 'DOUBLE-BLIND!', 'FALSIFIED!', 'EVIDENCE STRIKE!', 'NULL HYPOTHESIS!'],
+  'Atheism':           ["OCCAM'S RAZOR!", 'BURDEN OF PROOF!', 'CITATION NEEDED!', 'TEAPOT BLAST!', 'SKEPTIC STRIKE!'],
+  'Techno-Utopiaism':  ['ALGORITHM SURGE!', 'SINGULARITY PULSE!', 'UPLOAD BLAST!', 'GPT STRIKE!', 'BLOCKCHAIN BOMB!'],
+};
+
+const FINISHER_NAME = {
+  'Catholicism':       'PAPAL BULL OF FINALITY!',
+  'Protestantism':     'GREAT AWAKENING!',
+  'Orthodox Judaism':  'COVENANTAL DECREE!',
+  'Islam':             'DAY OF JUDGMENT!',
+  'Jainism':           'KEVALA JNANA!',
+  'Hinduism':          'BRAHMĀSTRA!',
+  'Taoism':            'PERFECT WUWEI!',
+  'Mormonism':         'CELESTIAL EXALTATION!',
+  'Scientology':       'OT VIII BLAST!',
+  'UFO-ology':         'MOTHERSHIP ARRIVES!',
+  'Science':           'NOBEL PRIZE!',
+  'Atheism':           'GOD IS DEAD!',
+  'Techno-Utopiaism':  'TECHNOLOGICAL SINGULARITY!',
+};
+
 function buildSymbolAura(belief, side) {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 256;
@@ -2912,23 +3069,7 @@ function buildSymbolAura(belief, side) {
   ctx.font = 'bold 180px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  // Per-belief glyph
-  const glyphs = {
-    'Catholicism':       '✝',
-    'Protestantism':     '📖',
-    'Orthodox Judaism':  '✡',
-    'Islam':             '☪',
-    'Jainism':           '🕉',
-    'Hinduism':          'ॐ',
-    'Taoism':            '☯',
-    'Mormonism':         '🅼',
-    'Scientology':       '⚔',
-    'UFO-ology':         '🛸',
-    'Science':           '⚛',
-    'Atheism':           'Ⓐ',
-    'Techno-Utopiaism':  '⚙',
-  };
-  ctx.fillText(glyphs[belief] || '?', 128, 138);
+  ctx.fillText(SYMBOL_GLYPH[belief] || '?', 128, 138);
   const tex = new THREE.CanvasTexture(c);
   tex.anisotropy = 4;
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, opacity: 0.75 });
@@ -3385,98 +3526,41 @@ function updateFighter(f, t, dt) {
       targetArmR = { rx: -0.7, rz: -0.45 };
       break;
     }
-    case 'jab': {
-      const dur = 0.32;
-      const t0 = f.stateTimer / dur;
-      // Hold near peak for a beat so the contact moment is visible
-      const e = t0 < 0.35 ? t0 / 0.35 : t0 < 0.65 ? 1 : 1 - (t0 - 0.65) / 0.35;
-      const extend = Math.max(0, Math.min(1, e));
-      // Left arm swings forward+inward. Idle is rx=-0.7, peak is rx=-1.7
-      targetArmL = { rx: -0.7 - extend * 1.0, rz: 0.45 + extend * 0.1 };
-      targetArmR = { rx: -0.7, rz: -0.45 }; // keep guard
-      bodyZ = -extend * 0.7;
-      bodyRot = -extend * 0.12;
-      if (f.stateTimer > dur + 0.05) setFighterState(f, 'idle');
+    case 'charging': {
+      // Attacker windup before launching their symbol beam. Crouch slightly,
+      // tremble, and bring hands toward the chest to "gather energy."
+      const dur = 0.55;
+      const k = Math.min(1, f.stateTimer / dur);
+      const wave = Math.sin(k * Math.PI);
+      bobY = -0.05 - wave * 0.05 + Math.sin(f.stateTimer * 38) * 0.025;
+      bodyZ = -wave * 0.18;
+      bodyTilt = Math.sin(f.stateTimer * 32) * 0.04;
+      // Hands cupped at chest height (gathering the symbol)
+      targetArmL = { rx: -1.5 - wave * 0.3, rz: 0.85 };
+      targetArmR = { rx: -1.5 - wave * 0.3, rz: -0.85 };
+      if (f.stateTimer > dur + 0.1) setFighterState(f, 'idle');
       break;
     }
-    case 'cross': {
-      const dur = 0.36;
-      const t0 = f.stateTimer / dur;
-      const e = t0 < 0.35 ? t0 / 0.35 : t0 < 0.65 ? 1 : 1 - (t0 - 0.65) / 0.35;
-      const extend = Math.max(0, Math.min(1, e));
-      // Right arm: from idle guard (-0.7, -0.45) to peak (-1.9, -0.4)
-      // rx more negative = arm extends further forward + slightly up
-      // rz slightly less inward at peak (arm straightens out)
-      targetArmR = { rx: -0.7 - extend * 1.2, rz: -0.45 + extend * 0.05 };
-      targetArmL = { rx: -0.7, rz: 0.55 }; // guard
-      bodyZ = -extend * 0.85;
-      bodyRot = extend * 0.4;
-      if (f.stateTimer > dur + 0.05) setFighterState(f, 'idle');
-      break;
-    }
-    case 'hook': {
-      const dur = 0.42;
-      const t0 = f.stateTimer / dur;
-      const e = t0 < 0.4 ? t0 / 0.4 : t0 < 0.6 ? 1 : 1 - (t0 - 0.6) / 0.4;
-      const extend = Math.max(0, Math.min(1, e));
-      // Wide looping hook — arm pivots more around z (horizontal swing)
-      targetArmR = { rx: -0.5 - extend * 0.6, rz: -0.45 - extend * 1.4 };
-      targetArmL = { rx: -0.7, rz: 0.55 };
-      bodyRot = extend * 0.7;
-      bodyZ = -extend * 0.55;
-      if (f.stateTimer > dur + 0.08) setFighterState(f, 'idle');
-      break;
-    }
-    case 'uppercut': {
-      const dur = 0.44;
-      const t0 = f.stateTimer / dur;
-      const e = t0 < 0.4 ? t0 / 0.4 : t0 < 0.6 ? 1 : 1 - (t0 - 0.6) / 0.4;
-      const extend = Math.max(0, Math.min(1, e));
-      // From crouch (rx near 0, arm down) to high punch (rx very negative)
-      targetArmR = { rx: 0.2 - extend * 2.6, rz: -0.45 - extend * 0.2 };
-      targetArmL = { rx: -0.7, rz: 0.5 };
-      bodyZ = -extend * 0.7;
-      bobY = -0.22 + extend * 0.45; // crouch then explode up
-      if (f.stateTimer > dur + 0.08) setFighterState(f, 'idle');
-      break;
-    }
-    case 'block': {
-      targetArmL = { rx: -1.2, rz: 0.3 };
-      targetArmR = { rx: -1.2, rz: -0.3 };
-      bodyZ = 0.12;
-      if (f.stateTimer > 0.4) setFighterState(f, 'idle');
-      break;
-    }
-    case 'flinch': {
-      // Sharp head-snap reaction from a landed hit
-      const dur = 0.35;
+    case 'flash': {
+      // Defender's hit reaction — body recoils backward, head snaps to the
+      // side, arms fly up reactively, then back to idle.
+      const dur = 0.45;
       const k = Math.min(1, f.stateTimer / dur);
       const wave = Math.sin(k * Math.PI);
       const dir = f.flinchDir ?? 1;
-      // Head snap (around its own local y axis = vertical, so face turns aside)
-      f.headGroup.rotation.y = wave * 0.6 * dir;
-      f.headGroup.rotation.z = wave * 0.3 * dir;
-      bodyTilt = -0.35 * wave;
-      bodyZ = 0.32 * wave;  // body recoils backward (away from opponent)
-      bodyRot = 0.2 * wave * dir;
-      // Reactive guard
-      targetArmL = { rx: -1.2 - wave * 0.4, rz: 0.6 + wave * 0.3 };
-      targetArmR = { rx: -1.2 - wave * 0.4, rz: -0.6 - wave * 0.3 };
+      f.headGroup.rotation.y = wave * 0.7 * dir;
+      f.headGroup.rotation.z = wave * 0.35 * dir;
+      bodyTilt = -0.4 * wave;
+      bodyZ = 0.42 * wave;
+      bodyRot = 0.25 * wave * dir;
+      bobY = wave * 0.08;
+      targetArmL = { rx: -1.4 - wave * 0.5, rz: 0.7 + wave * 0.5 };
+      targetArmR = { rx: -1.4 - wave * 0.5, rz: -0.7 - wave * 0.5 };
       if (f.stateTimer > dur + 0.05) {
         f.headGroup.rotation.y = 0;
         f.headGroup.rotation.z = 0;
         setFighterState(f, 'idle');
       }
-      break;
-    }
-    case 'stagger': {
-      const k = Math.min(1, f.stateTimer / 0.6);
-      bodyTilt = -0.5 * (1 - Math.abs(k - 0.5) * 2);
-      bodyZ = 0.45 * k;
-      bobY = Math.sin(f.stateTimer * 8) * 0.06;
-      targetArmL = { rx: -0.4, rz: 1.0 };
-      targetArmR = { rx: -0.4, rz: -1.0 };
-      if (f.stateTimer > 0.8) setFighterState(f, 'idle');
       break;
     }
     case 'ko': {
@@ -3666,28 +3750,38 @@ function planBout(b1, b2) {
   return { winner, loser, move: match.move, quip: match.quip };
 }
 
-function generateEvents(durationS, winnerIsRight) {
-  // Tighter, punchier sequence — frequent attacks, almost all land for max action.
+function generateEvents(durationS) {
+  // Turn-based beam combat. 5 rounds where attackers charge → fire a symbol
+  // beam → defender takes the hit. Loser HP reaches 0 on the 5th (finisher)
+  // round, then KO + victory.
   const events = [];
-  let t = 0.6;
-  const moves = ['jab', 'cross', 'hook', 'uppercut'];
-  while (t < durationS - 2.6) {
-    // Winner aggressive ~70% of the time
-    const winnerAttacks = Math.random() < 0.7;
+  const totalRounds = 5;
+  const bodyEnd = durationS - 1.6;       // time the final beam should land
+  const bodyStart = 0.5;
+  const roundLen = (bodyEnd - bodyStart) / totalRounds;
+  // Damage budget so loser hits 0 HP exactly on the finisher
+  const nonFinisherDmgs = [18, 22, 20, 25]; // 4 hits before finisher → 85 total
+  const finisherDmg = 100 - nonFinisherDmgs.reduce((a, b) => a + b, 0) + 5;
+
+  for (let r = 0; r < totalRounds; r++) {
+    const turnT = bodyStart + r * roundLen;
+    const isFinisher = r === totalRounds - 1;
+    // Winner attacks rounds 1, 3, 5 (and the finisher); loser counters on 2, 4
+    // (mostly missing or doing token damage), so loser HP drains steadily.
+    const winnerAttacks = isFinisher || r % 2 === 0;
     const attacker = winnerAttacks ? 'winner' : 'loser';
-    const defender = winnerAttacks ? 'loser' : 'winner';
-    const move = moves[Math.floor(Math.random() * moves.length)];
-    // Most punches connect for visible action
-    const lands = winnerAttacks ? Math.random() < 0.85 : Math.random() < 0.55;
-    events.push({ t, type: 'attack', attacker, defender, move, lands });
-    t += 0.42 + Math.random() * 0.35; // 0.42s–0.77s between strikes
+    const defender = winnerAttacks ? 'loser'  : 'winner';
+    const damage = winnerAttacks
+      ? (isFinisher ? finisherDmg : nonFinisherDmgs[Math.floor(r / 2)])
+      : 6; // loser's counter only chips the winner a bit
+    // Sub-events: charge (attacker poses), launch (beam flies), impact (hit)
+    events.push({ t: turnT,        type: 'charge', attacker });
+    events.push({ t: turnT + 0.55, type: 'launch', attacker, defender, isFinisher });
+    events.push({ t: turnT + 1.10, type: 'impact', attacker, defender, isFinisher, damage });
   }
-  // Finisher sequence
-  events.push({ t: durationS - 2.4, type: 'attack', attacker: 'winner', defender: 'loser', move: 'cross', lands: true, big: true });
-  events.push({ t: durationS - 1.9, type: 'stagger', who: 'loser' });
-  events.push({ t: durationS - 1.2, type: 'attack', attacker: 'winner', defender: 'loser', move: 'uppercut', lands: true, finisher: true });
-  events.push({ t: durationS - 0.85, type: 'ko', who: 'loser' });
-  events.push({ t: durationS - 0.2, type: 'victory', who: 'winner' });
+  // KO fall + victory pose right at the end
+  events.push({ t: durationS - 0.85, type: 'ko',      who: 'loser' });
+  events.push({ t: durationS - 0.2,  type: 'victory', who: 'winner' });
   return events;
 }
 
@@ -3710,9 +3804,21 @@ function startBout(b1, b2) {
   // Bell has rung → name banners move from screen sides to above each fighter's head
   f1.labelMode = 'top';
   f2.labelMode = 'top';
+  f1.hp = 100; f2.hp = 100;
   scene.add(f1.group);
   scene.add(f2.group);
   fighters = [f1, f2];
+
+  // Show HP bars
+  document.getElementById('hp-name-1').textContent = b1.toUpperCase();
+  document.getElementById('hp-name-2').textContent = b2.toUpperCase();
+  document.getElementById('hp-fill-1').style.width = '100%';
+  document.getElementById('hp-fill-2').style.width = '100%';
+  document.getElementById('hp-bars').classList.add('show');
+
+  // Clear any leftover beams from an interrupted bout
+  activeBeams.forEach(b => { scene.remove(b.sprite); b.sprite.material.dispose(); });
+  activeBeams.length = 0;
 
   // Fade the top HUD so it doesn't compete with the action / banners
   document.body.classList.add('bout-active');
@@ -3734,8 +3840,8 @@ function startBout(b1, b2) {
   const winnerFighter = winnerIsB1 ? f1 : f2;
   const loserFighter = winnerIsB1 ? f2 : f1;
 
-  const duration = 13 + Math.random() * 2; // ~13–15s of action — short and punchy
-  const events = generateEvents(duration, !winnerIsB1);
+  const duration = 13.5; // 5 turn-based beam rounds + KO + victory fit in ~13.5s
+  const events = generateEvents(duration);
 
   bout = {
     startTime: clock.getElapsedTime(),
@@ -3773,6 +3879,7 @@ function endBout() {
   if (!bout) return;
   bout.state = 'verdict';
   document.getElementById('timer').classList.remove('show');
+  document.getElementById('hp-bars').classList.remove('show');
   // Bring the HUD back so the user can pick a different matchup
   document.body.classList.remove('bout-active');
 
@@ -3857,50 +3964,72 @@ function handleEvent(ev) {
   const winner = bout.winner;
   const loser = bout.loser;
 
-  if (ev.type === 'attack') {
+  if (ev.type === 'charge') {
+    const att = ev.attacker === 'winner' ? winner : loser;
+    if (att.state === 'ko') return;
+    setFighterState(att, 'charging');
+    // Pick a move name (or the finisher) and flash it on screen
+    const moveList = MOVE_NAMES[att.belief] || ['ATTACK!'];
+    const moveName = moveList[Math.floor(Math.random() * moveList.length)];
+    showMoveBanner(moveName);
+  }
+  else if (ev.type === 'launch') {
     const att = ev.attacker === 'winner' ? winner : loser;
     const def = ev.defender === 'winner' ? winner : loser;
-    setFighterState(att, ev.move);
-    if (ev.lands) {
-      // Match impact timing to the punch animation's peak-extension frame so
-      // the glove is physically nearest the defender's head when we trigger
-      // the hit reaction. Different moves peak at slightly different times.
-      const peakDelay = ev.move === 'jab' ? 100 : ev.move === 'cross' ? 130 : ev.move === 'hook' ? 160 : 170;
-      setTimeout(() => {
-        if (def.state === 'ko') return;
-        // Direction the defender's head should snap: head pushed AWAY from
-        // the side of attacker that struck. flinchDir = +1 turns head one
-        // way, -1 the other.
-        def.flinchDir = ev.move === 'jab' ? -att.side : att.side;
-        setFighterState(def, 'flinch');
-        // Spawn the impact sprite at the defender's head position (between
-        // glove and head visually) so it lines up with the contact point.
-        const impactX = def.group.position.x + (att.group.position.x - def.group.position.x) * 0.35;
-        const impactY = 2.05 + (Math.random() - 0.5) * 0.15;
-        const impactZ = (Math.random() - 0.5) * 0.25;
-        const word = ev.finisher ? 'K.O.!' : (ev.big ? 'BOOM!' : IMPACT_WORDS[Math.floor(Math.random() * IMPACT_WORDS.length)]);
-        spawnImpact({ x: impactX, y: impactY, z: impactZ }, word, ev.big || ev.finisher);
-        playPunch(ev.big || ev.finisher ? 1.8 : 1.0);
-        shakeScreen(ev.finisher ? 0.5 : ev.big ? 0.25 : 0.12);
-        if (ev.finisher) showKOOverlay();
-      }, peakDelay);
+    if (att.state === 'ko' || def.state === 'ko') return;
+    // If finisher, override the banner with the finisher name
+    if (ev.isFinisher) {
+      const finName = FINISHER_NAME[att.belief] || 'FINISHING BLOW!';
+      showMoveBanner(finName);
     }
-  } else if (ev.type === 'stagger') {
-    const who = ev.who === 'winner' ? winner : loser;
-    setFighterState(who, 'stagger');
-    setTimeout(playCrowd, 100);
-  } else if (ev.type === 'ko') {
+    spawnBeam(att, def, ev.isFinisher);
+    playBeamCharge();
+  }
+  else if (ev.type === 'impact') {
+    const att = ev.attacker === 'winner' ? winner : loser;
+    const def = ev.defender === 'winner' ? winner : loser;
+    if (def.state === 'ko') return;
+    def.flinchDir = att.side; // head snaps in direction of impact
+    setFighterState(def, 'flash');
+    // Hit reaction at defender's head position
+    const impactPos = new THREE.Vector3();
+    def.headGroup.getWorldPosition(impactPos);
+    const word = ev.isFinisher ? 'K.O.!' : (['HIT!', 'SMITE!', 'STRUCK!', 'CRIT!'][Math.floor(Math.random() * 4)]);
+    spawnImpact({ x: impactPos.x, y: impactPos.y, z: impactPos.z }, word, ev.isFinisher);
+    // Apply damage to the HP bars
+    def.hp = Math.max(0, (def.hp ?? 100) - ev.damage);
+    updateHPBars();
+    playPunch(ev.isFinisher ? 1.8 : 1.0);
+    shakeScreen(ev.isFinisher ? 0.55 : 0.2);
+    if (ev.isFinisher) showKOOverlay();
+  }
+  else if (ev.type === 'ko') {
     const who = ev.who === 'winner' ? winner : loser;
     who.koZ = who.group.position.z;
     setFighterState(who, 'ko');
     playPunch(2.2);
     shakeScreen(0.6);
-    spawnImpact({ x: who.group.position.x, y: 1.6, z: 0 }, 'K.O.!', true);
     setTimeout(playCrowd, 80);
-  } else if (ev.type === 'victory') {
+  }
+  else if (ev.type === 'victory') {
     const who = ev.who === 'winner' ? winner : loser;
     setFighterState(who, 'victory');
   }
+}
+
+function showMoveBanner(text) {
+  const el = document.getElementById('move-banner');
+  el.textContent = text;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+
+function updateHPBars() {
+  fighters.forEach((f, i) => {
+    const fill = document.getElementById('hp-fill-' + (i + 1));
+    if (fill) fill.style.width = ((f.hp ?? 100) / 100 * 100) + '%';
+  });
 }
 
 function showKOOverlay() {
@@ -3909,6 +4038,86 @@ function showKOOverlay() {
   ri.classList.remove('show');
   void ri.offsetWidth;
   ri.classList.add('show');
+}
+
+/* ============================================================
+   BEAM PROJECTILES — each turn the attacker's religious symbol
+   flies across the ring as a glowing sprite trail.
+   ============================================================ */
+const activeBeams = [];
+
+function makeBeamSprite(belief, big) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+  const color = BEAM_COLOR[belief] || '#f0c958';
+  // Radial glow backdrop
+  const grd = ctx.createRadialGradient(128, 128, 8, 128, 128, 128);
+  grd.addColorStop(0, '#ffffff');
+  grd.addColorStop(0.18, color);
+  grd.addColorStop(0.55, color + 'aa');
+  grd.addColorStop(0.9, color + '22');
+  grd.addColorStop(1, color + '00');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(128, 128, 128, 0, Math.PI * 2);
+  ctx.fill();
+  // Glyph in white
+  ctx.font = 'bold 170px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#000';
+  ctx.fillStyle = '#fff';
+  const glyph = SYMBOL_GLYPH[belief] || '?';
+  ctx.strokeText(glyph, 128, 140);
+  ctx.fillText(glyph, 128, 140);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  const s = big ? 2.8 : 1.7;
+  sprite.scale.set(s, s, 1);
+  sprite.renderOrder = 1100;
+  return sprite;
+}
+
+function spawnBeam(attacker, defender, isFinisher) {
+  const sprite = makeBeamSprite(attacker.belief, isFinisher);
+  const startPos = new THREE.Vector3();
+  attacker.headGroup.getWorldPosition(startPos);
+  startPos.y -= 0.4; // launch from chest height
+  const endPos = new THREE.Vector3();
+  defender.headGroup.getWorldPosition(endPos);
+  sprite.position.copy(startPos);
+  scene.add(sprite);
+  activeBeams.push({
+    sprite, startPos, endPos,
+    t: 0, dur: isFinisher ? 0.6 : 0.55,
+    isFinisher,
+    trail: [], // mini trail sprites
+    trailBelief: attacker.belief,
+  });
+}
+
+function playBeamCharge() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Rising whoosh: sweep frequency up
+  const o = audioCtx.createOscillator();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(180, t);
+  o.frequency.exponentialRampToValueAtTime(900, t + 0.45);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.001, t);
+  g.gain.exponentialRampToValueAtTime(0.22, t + 0.1);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+  const lp = audioCtx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 1400;
+  o.connect(lp).connect(g).connect(audioCtx.destination);
+  o.start(t);
+  o.stop(t + 0.6);
 }
 
 /* ============================================================
@@ -3923,6 +4132,42 @@ function animate() {
   audience.children.forEach(c => {
     c.position.y = c.userData.baseY + Math.sin(t * 2.5 + c.userData.basePhase) * 0.04;
   });
+
+  // Beam projectiles flying between fighters
+  for (let i = activeBeams.length - 1; i >= 0; i--) {
+    const b = activeBeams[i];
+    b.t += dt;
+    const u = Math.min(1, b.t / b.dur);
+    // Arc the beam up then down between source and target
+    const px = THREE.MathUtils.lerp(b.startPos.x, b.endPos.x, u);
+    const pz = THREE.MathUtils.lerp(b.startPos.z, b.endPos.z, u);
+    const py = THREE.MathUtils.lerp(b.startPos.y, b.endPos.y, u) + Math.sin(u * Math.PI) * 0.6;
+    b.sprite.position.set(px, py, pz);
+    b.sprite.material.rotation = b.t * 14;
+    // Slight scale pulse
+    const pulse = 1 + Math.sin(b.t * 30) * 0.08;
+    const baseS = b.isFinisher ? 2.8 : 1.7;
+    b.sprite.scale.set(baseS * pulse, baseS * pulse, 1);
+    // Drop trail dots every couple of frames
+    if (b.t > b.lastTrail + 0.05) {
+      b.lastTrail = b.t;
+      const trailSprite = makeBeamSprite(b.trailBelief, false);
+      trailSprite.scale.multiplyScalar(0.5);
+      trailSprite.position.copy(b.sprite.position);
+      trailSprite.userData.life = 0;
+      trailSprite.userData.maxLife = 0.32;
+      trailSprite.userData.baseScale = baseS * 0.5;
+      trailSprite.material.opacity = 0.8;
+      scene.add(trailSprite);
+      impactPool.push(trailSprite);
+    }
+    if (u >= 1) {
+      scene.remove(b.sprite);
+      b.sprite.material.map?.dispose();
+      b.sprite.material.dispose();
+      activeBeams.splice(i, 1);
+    }
+  }
 
   // Impact-sprite lifecycle: scale up then fade out
   for (let i = impactPool.length - 1; i >= 0; i--) {
