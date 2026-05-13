@@ -3377,89 +3377,91 @@ function updateFighter(f, t, dt) {
       // Bigger bounce — visible action even between punches
       bobY = Math.sin(phase * 1.4) * 0.09;
       bodyTilt = Math.sin(phase * 0.7) * 0.06;
-      // Guard up, gloves near chin
-      targetArmL = { rx: 0.9, rz: 0.7 };
-      targetArmR = { rx: 0.9, rz: -0.7 };
+      // Guard up: arms held FORWARD with gloves at chin level.
+      // (rx must be NEGATIVE — positive rx rotates the hanging arm BACK behind
+      // the body, which is why old swings looked like they went behind first.)
+      // rz pulls gloves slightly inward toward the chin.
+      targetArmL = { rx: -0.7, rz: 0.45 };
+      targetArmR = { rx: -0.7, rz: -0.45 };
       break;
     }
     case 'jab': {
-      const dur = 0.28;
+      const dur = 0.32;
       const t0 = f.stateTimer / dur;
-      const e = t0 < 0.35 ? t0 / 0.35 : 1 - (t0 - 0.35) / 0.65;
+      // Hold near peak for a beat so the contact moment is visible
+      const e = t0 < 0.35 ? t0 / 0.35 : t0 < 0.65 ? 1 : 1 - (t0 - 0.65) / 0.35;
       const extend = Math.max(0, Math.min(1, e));
-      // Left arm swings forward AND inward (rz>0 swings across body to +x) so
-      // the glove crosses centerline and lands on the opponent's head
-      targetArmL = { rx: -1.65 + (1 - extend) * 1.3, rz: 0.45 * extend };
-      targetArmR = { rx: 0.8, rz: -0.7 };
-      bodyZ = -extend * 0.7; // bigger step-in
+      // Left arm swings forward+inward. Idle is rx=-0.7, peak is rx=-1.7
+      targetArmL = { rx: -0.7 - extend * 1.0, rz: 0.45 + extend * 0.1 };
+      targetArmR = { rx: -0.7, rz: -0.45 }; // keep guard
+      bodyZ = -extend * 0.7;
       bodyRot = -extend * 0.12;
       if (f.stateTimer > dur + 0.05) setFighterState(f, 'idle');
       break;
     }
     case 'cross': {
-      const dur = 0.32;
+      const dur = 0.36;
       const t0 = f.stateTimer / dur;
-      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const e = t0 < 0.35 ? t0 / 0.35 : t0 < 0.65 ? 1 : 1 - (t0 - 0.65) / 0.35;
       const extend = Math.max(0, Math.min(1, e));
-      // Right arm: rotation.x past -π/2 sends glove slightly upward, and
-      // rotation.z negative swings it inward across the body to opponent's face
-      targetArmR = { rx: -1.85 + (1 - extend) * 1.4, rz: -0.5 * extend };
-      targetArmL = { rx: 0.7, rz: 0.55 };
-      bodyZ = -extend * 0.9; // big lean — fighter steps into the punch
+      // Right arm: from idle guard (-0.7, -0.45) to peak (-1.9, -0.4)
+      // rx more negative = arm extends further forward + slightly up
+      // rz slightly less inward at peak (arm straightens out)
+      targetArmR = { rx: -0.7 - extend * 1.2, rz: -0.45 + extend * 0.05 };
+      targetArmL = { rx: -0.7, rz: 0.55 }; // guard
+      bodyZ = -extend * 0.85;
       bodyRot = extend * 0.4;
       if (f.stateTimer > dur + 0.05) setFighterState(f, 'idle');
       break;
     }
     case 'hook': {
-      const dur = 0.38;
+      const dur = 0.42;
       const t0 = f.stateTimer / dur;
-      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const e = t0 < 0.4 ? t0 / 0.4 : t0 < 0.6 ? 1 : 1 - (t0 - 0.6) / 0.4;
       const extend = Math.max(0, Math.min(1, e));
-      // Wide looping hook — arm sweeps horizontally
-      targetArmR = { rx: -0.5 - extend * 0.4, rz: -1.6 - extend * 0.4 };
-      targetArmL = { rx: 0.9, rz: 0.6 };
-      bodyRot = extend * 0.65;
+      // Wide looping hook — arm pivots more around z (horizontal swing)
+      targetArmR = { rx: -0.5 - extend * 0.6, rz: -0.45 - extend * 1.4 };
+      targetArmL = { rx: -0.7, rz: 0.55 };
+      bodyRot = extend * 0.7;
       bodyZ = -extend * 0.55;
       if (f.stateTimer > dur + 0.08) setFighterState(f, 'idle');
       break;
     }
     case 'uppercut': {
-      const dur = 0.4;
+      const dur = 0.44;
       const t0 = f.stateTimer / dur;
-      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const e = t0 < 0.4 ? t0 / 0.4 : t0 < 0.6 ? 1 : 1 - (t0 - 0.6) / 0.4;
       const extend = Math.max(0, Math.min(1, e));
-      // From low crouched to high upward; rz brings the fist inward at impact
-      targetArmR = { rx: 0.4 - extend * 2.8, rz: -0.4 * extend };
-      targetArmL = { rx: 0.9, rz: 0.5 };
-      bodyZ = -extend * 0.75;
-      bobY = -0.22 + extend * 0.42; // crouch then explode up
+      // From crouch (rx near 0, arm down) to high punch (rx very negative)
+      targetArmR = { rx: 0.2 - extend * 2.6, rz: -0.45 - extend * 0.2 };
+      targetArmL = { rx: -0.7, rz: 0.5 };
+      bodyZ = -extend * 0.7;
+      bobY = -0.22 + extend * 0.45; // crouch then explode up
       if (f.stateTimer > dur + 0.08) setFighterState(f, 'idle');
       break;
     }
     case 'block': {
-      targetArmL = { rx: -0.3, rz: 0.3 };
-      targetArmR = { rx: -0.3, rz: -0.3 };
+      targetArmL = { rx: -1.2, rz: 0.3 };
+      targetArmR = { rx: -1.2, rz: -0.3 };
       bodyZ = 0.12;
       if (f.stateTimer > 0.4) setFighterState(f, 'idle');
       break;
     }
     case 'flinch': {
-      // Sharp head-snap reaction from a landed hit. The defender's HEAD
-      // rotates to the side as if recoiling from the glove, the body tilts
-      // back and shifts away from the puncher, then everything snaps back.
-      const dur = 0.32;
+      // Sharp head-snap reaction from a landed hit
+      const dur = 0.35;
       const k = Math.min(1, f.stateTimer / dur);
       const wave = Math.sin(k * Math.PI);
       const dir = f.flinchDir ?? 1;
       // Head snap (around its own local y axis = vertical, so face turns aside)
-      f.headGroup.rotation.y = wave * 0.55 * dir;
-      f.headGroup.rotation.z = wave * 0.25 * dir;
-      bodyTilt = -0.32 * wave;
-      bodyZ = 0.28 * wave;  // body recoils backward (away from opponent)
-      bodyRot = 0.15 * wave * dir;
-      // Guard up (arms react to protect face)
-      targetArmL = { rx: 0.4 - wave * 0.7, rz: 0.7 + wave * 0.5 };
-      targetArmR = { rx: 0.4 - wave * 0.7, rz: -0.7 - wave * 0.5 };
+      f.headGroup.rotation.y = wave * 0.6 * dir;
+      f.headGroup.rotation.z = wave * 0.3 * dir;
+      bodyTilt = -0.35 * wave;
+      bodyZ = 0.32 * wave;  // body recoils backward (away from opponent)
+      bodyRot = 0.2 * wave * dir;
+      // Reactive guard
+      targetArmL = { rx: -1.2 - wave * 0.4, rz: 0.6 + wave * 0.3 };
+      targetArmR = { rx: -1.2 - wave * 0.4, rz: -0.6 - wave * 0.3 };
       if (f.stateTimer > dur + 0.05) {
         f.headGroup.rotation.y = 0;
         f.headGroup.rotation.z = 0;
@@ -3472,34 +3474,42 @@ function updateFighter(f, t, dt) {
       bodyTilt = -0.5 * (1 - Math.abs(k - 0.5) * 2);
       bodyZ = 0.45 * k;
       bobY = Math.sin(f.stateTimer * 8) * 0.06;
-      targetArmL = { rx: 0.4, rz: 1.0 };
-      targetArmR = { rx: 0.4, rz: -1.0 };
+      targetArmL = { rx: -0.4, rz: 1.0 };
+      targetArmR = { rx: -0.4, rz: -1.0 };
       if (f.stateTimer > 0.8) setFighterState(f, 'idle');
       break;
     }
     case 'ko': {
-      // Slower, clearer fall — 1.4s arc instead of 1s, with eased-out timing so
-      // the topple has weight at the end. Smaller backward slide so the body
-      // stays on-camera (the old 1.1-unit slide pushed the fighter off the
-      // left/right edge on desktop FOV).
-      const dur = 1.4;
+      // Topple onto back via quaternion slerp. The simple Euler rotation
+      // before couldn't actually express "fall backward + lay face-up" because
+      // of how the fighter's rotation.y stacks with rotation.z. Quaternion
+      // slerp from upright-facing-inward to lying-flat-face-up.
+      const dur = 1.5;
       const raw = Math.min(1, f.stateTimer / dur);
       const k = 1 - Math.pow(1 - raw, 3); // ease-out cubic
-      const targetTilt = Math.PI / 2 * f.side;
-      g.rotation.z = targetTilt * k;
-      g.position.x = f.side * 0.75 + f.side * k * 0.35;
-      // Tiny rise so the rotated body silhouette sits ON the canvas instead of
-      // sinking into it
-      g.position.y = k * 0.15;
-      // Arms splay outward as they fall
-      targetArmL = { rx: 0.1, rz: 1.4 };
-      targetArmR = { rx: 0.1, rz: -1.4 };
-      // Small "bounce" right at impact — body hits canvas at k≈0.85
-      const bounceK = Math.max(0, 1 - Math.abs(raw - 0.85) * 8);
-      g.position.y += bounceK * 0.12;
-      // Lingering twitch on the floor once they're down
-      const twitch = f.stateTimer > dur ? Math.sin(f.stateTimer * 12) * 0.04 : 0;
-      g.rotation.x = twitch;
+      if (!f.koStartQuat) {
+        f.koStartQuat = g.quaternion.clone();
+        // Final orientation: head pointed AWAY from opponent (world -x for
+        // left fighter, world +x for right), face pointing UP (world +y).
+        // Derived target Euler (XYZ): (-π/2, 0, side === -1 ? +π/2 : -π/2)
+        f.koEndQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+          -Math.PI / 2, 0, f.side === -1 ? Math.PI / 2 : -Math.PI / 2
+        ));
+      }
+      g.quaternion.slerpQuaternions(f.koStartQuat, f.koEndQuat, k);
+      // Slide backward a bit (away from opponent) + drop to canvas level.
+      // Body axis after rotation is horizontal along world x, so we sit the
+      // fighter's hip-pivot a bit above y=0 so the body silhouette rests on
+      // the canvas surface instead of sinking through it.
+      g.position.x = f.side * 0.75 + f.side * k * 0.6;
+      g.position.y = k * 0.2;
+      g.position.z = 0;
+      // Impact bounce when the body hits the canvas (around 80% of the fall)
+      const bounceK = Math.max(0, 1 - Math.abs(raw - 0.8) * 8);
+      g.position.y += bounceK * 0.15;
+      // Arms splay out to the sides as they fall
+      targetArmL = { rx: -0.2 + k * 0.6, rz: 1.3 };
+      targetArmR = { rx: -0.2 + k * 0.6, rz: -1.3 };
       break;
     }
     case 'victory': {
