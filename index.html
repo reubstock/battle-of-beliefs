@@ -820,25 +820,402 @@ function buildRing() {
   mat.receiveShadow = true;
   ringGroup.add(mat);
 
-  // Center logo (a stylized B)
+  // Center mat artwork: Ganesh (left) vs Jesus (right), drawn to a canvas texture
   const logoCanvas = document.createElement('canvas');
-  logoCanvas.width = 512; logoCanvas.height = 512;
+  logoCanvas.width = 1024; logoCanvas.height = 1024;
   const ctx2d = logoCanvas.getContext('2d');
+
+  // Background
   ctx2d.fillStyle = '#e8d8ad';
-  ctx2d.fillRect(0, 0, 512, 512);
+  ctx2d.fillRect(0, 0, 1024, 1024);
   ctx2d.strokeStyle = '#7a1a26';
-  ctx2d.lineWidth = 8;
-  ctx2d.strokeRect(14, 14, 484, 484);
+  ctx2d.lineWidth = 16;
+  ctx2d.strokeRect(20, 20, 984, 984);
+
+  // Title at top
   ctx2d.fillStyle = '#7a1a26';
-  ctx2d.font = 'bold 200px sans-serif';
+  ctx2d.font = 'bold 72px sans-serif';
   ctx2d.textAlign = 'center';
   ctx2d.textBaseline = 'middle';
-  ctx2d.fillText('BoB', 256, 256);
-  ctx2d.font = 'bold 38px sans-serif';
-  ctx2d.fillText('BATTLE OF BELIEFS', 256, 410);
+  ctx2d.fillText('BATTLE OF BELIEFS', 512, 90);
+
+  // Divider
+  ctx2d.lineWidth = 6;
+  ctx2d.beginPath();
+  ctx2d.moveTo(512, 160);
+  ctx2d.lineTo(512, 880);
+  ctx2d.stroke();
+
+  // ----- Ganesh (left half, centered around x=256, y=520) -----
+  (function drawGanesh(cx, cy, s) {
+    // Yellow halo
+    ctx2d.fillStyle = '#f0c958';
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy - s * 0.25, s * 0.85, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#a8761e';
+    ctx2d.lineWidth = 4;
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy - s * 0.25, s * 0.85, 0, Math.PI * 2);
+    ctx2d.stroke();
+
+    // Body (orange dhoti / robe)
+    ctx2d.fillStyle = '#f2832a';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.7, cy + s * 0.85);
+    ctx2d.lineTo(cx + s * 0.7, cy + s * 0.85);
+    ctx2d.lineTo(cx + s * 0.55, cy + s * 0.15);
+    ctx2d.lineTo(cx - s * 0.55, cy + s * 0.15);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#8a3a13';
+    ctx2d.lineWidth = 3;
+    ctx2d.stroke();
+
+    // Gold belt
+    ctx2d.fillStyle = '#d6a737';
+    ctx2d.fillRect(cx - s * 0.6, cy + s * 0.22, s * 1.2, s * 0.08);
+
+    // Belly (round Ganesh belly)
+    ctx2d.fillStyle = '#f2832a';
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy + s * 0.45, s * 0.32, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#8a3a13';
+    ctx2d.lineWidth = 2;
+    ctx2d.stroke();
+
+    // Elephant head (gray)
+    ctx2d.fillStyle = '#aab0b8';
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy - s * 0.15, s * 0.55, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#555';
+    ctx2d.lineWidth = 3;
+    ctx2d.stroke();
+
+    // Ears (large, floppy)
+    ctx2d.fillStyle = '#aab0b8';
+    ctx2d.beginPath();
+    ctx2d.ellipse(cx - s * 0.7, cy - s * 0.1, s * 0.32, s * 0.45, -0.25, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.stroke();
+    ctx2d.beginPath();
+    ctx2d.ellipse(cx + s * 0.7, cy - s * 0.1, s * 0.32, s * 0.45, 0.25, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.stroke();
+
+    // Inner ear (pink)
+    ctx2d.fillStyle = '#ff9caa';
+    ctx2d.beginPath();
+    ctx2d.ellipse(cx - s * 0.7, cy - s * 0.1, s * 0.18, s * 0.28, -0.25, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.ellipse(cx + s * 0.7, cy - s * 0.1, s * 0.18, s * 0.28, 0.25, 0, Math.PI * 2);
+    ctx2d.fill();
+
+    // Trunk (curls down then up to side)
+    ctx2d.strokeStyle = '#aab0b8';
+    ctx2d.lineWidth = s * 0.18;
+    ctx2d.lineCap = 'round';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx, cy + s * 0.05);
+    ctx2d.bezierCurveTo(cx + s * 0.1, cy + s * 0.3, cx + s * 0.35, cy + s * 0.4, cx + s * 0.3, cy + s * 0.2);
+    ctx2d.stroke();
+    // Trunk outline
+    ctx2d.strokeStyle = '#555';
+    ctx2d.lineWidth = 2;
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + s * 0.08, cy + s * 0.05);
+    ctx2d.bezierCurveTo(cx + s * 0.15, cy + s * 0.32, cx + s * 0.37, cy + s * 0.42, cx + s * 0.34, cy + s * 0.2);
+    ctx2d.stroke();
+
+    // Tusks (white)
+    ctx2d.fillStyle = '#fff8e0';
+    ctx2d.strokeStyle = '#a89060';
+    ctx2d.lineWidth = 2;
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.18, cy + s * 0.0);
+    ctx2d.lineTo(cx - s * 0.1, cy + s * 0.2);
+    ctx2d.lineTo(cx - s * 0.05, cy + s * 0.08);
+    ctx2d.closePath();
+    ctx2d.fill(); ctx2d.stroke();
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + s * 0.18, cy + s * 0.0);
+    ctx2d.lineTo(cx + s * 0.1, cy + s * 0.2);
+    ctx2d.lineTo(cx + s * 0.05, cy + s * 0.08);
+    ctx2d.closePath();
+    ctx2d.fill(); ctx2d.stroke();
+
+    // Crown
+    ctx2d.fillStyle = '#d6a737';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.45, cy - s * 0.55);
+    ctx2d.lineTo(cx + s * 0.45, cy - s * 0.55);
+    ctx2d.lineTo(cx + s * 0.32, cy - s * 0.72);
+    ctx2d.lineTo(cx + s * 0.15, cy - s * 0.55);
+    ctx2d.lineTo(cx, cy - s * 0.82);
+    ctx2d.lineTo(cx - s * 0.15, cy - s * 0.55);
+    ctx2d.lineTo(cx - s * 0.32, cy - s * 0.72);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#8a6010';
+    ctx2d.lineWidth = 3;
+    ctx2d.stroke();
+
+    // Crown jewel
+    ctx2d.fillStyle = '#c8102e';
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy - s * 0.55, s * 0.06, 0, Math.PI * 2);
+    ctx2d.fill();
+
+    // Tilak (forehead mark)
+    ctx2d.fillStyle = '#c8102e';
+    ctx2d.fillRect(cx - s * 0.035, cy - s * 0.42, s * 0.07, s * 0.13);
+
+    // Eyes
+    ctx2d.fillStyle = '#fff';
+    ctx2d.beginPath();
+    ctx2d.arc(cx - s * 0.18, cy - s * 0.22, s * 0.07, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.arc(cx + s * 0.18, cy - s * 0.22, s * 0.07, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.fillStyle = '#1a1a1a';
+    ctx2d.beginPath();
+    ctx2d.arc(cx - s * 0.18, cy - s * 0.22, s * 0.04, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.arc(cx + s * 0.18, cy - s * 0.22, s * 0.04, 0, Math.PI * 2);
+    ctx2d.fill();
+
+    // Four arms (gray sticks)
+    ctx2d.strokeStyle = '#aab0b8';
+    ctx2d.lineCap = 'round';
+    ctx2d.lineWidth = s * 0.1;
+    // Upper-left + lotus
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.45, cy + s * 0.2);
+    ctx2d.lineTo(cx - s * 0.85, cy - s * 0.15);
+    ctx2d.stroke();
+    ctx2d.fillStyle = '#ff88aa';
+    ctx2d.beginPath();
+    ctx2d.arc(cx - s * 0.9, cy - s * 0.18, s * 0.1, 0, Math.PI * 2);
+    ctx2d.fill();
+    // Lotus petals
+    ctx2d.fillStyle = '#ffc4d4';
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      ctx2d.beginPath();
+      ctx2d.ellipse(cx - s * 0.9 + Math.cos(a) * s * 0.07, cy - s * 0.18 + Math.sin(a) * s * 0.07, s * 0.05, s * 0.025, a, 0, Math.PI * 2);
+      ctx2d.fill();
+    }
+    // Upper-right + axe (parashu)
+    ctx2d.strokeStyle = '#aab0b8';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + s * 0.45, cy + s * 0.2);
+    ctx2d.lineTo(cx + s * 0.85, cy - s * 0.15);
+    ctx2d.stroke();
+    ctx2d.fillStyle = '#8a5210';
+    ctx2d.fillRect(cx + s * 0.82, cy - s * 0.4, s * 0.04, s * 0.28);
+    ctx2d.fillStyle = '#aaa';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + s * 0.78, cy - s * 0.4);
+    ctx2d.lineTo(cx + s * 0.98, cy - s * 0.32);
+    ctx2d.lineTo(cx + s * 0.86, cy - s * 0.24);
+    ctx2d.closePath();
+    ctx2d.fill();
+    // Lower-left + modaka (sweet)
+    ctx2d.strokeStyle = '#aab0b8';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.4, cy + s * 0.45);
+    ctx2d.lineTo(cx - s * 0.62, cy + s * 0.55);
+    ctx2d.stroke();
+    ctx2d.fillStyle = '#f0c958';
+    ctx2d.beginPath();
+    ctx2d.arc(cx - s * 0.68, cy + s * 0.55, s * 0.08, 0, Math.PI * 2);
+    ctx2d.fill();
+    // Lower-right + open palm (abhaya mudra)
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + s * 0.4, cy + s * 0.45);
+    ctx2d.lineTo(cx + s * 0.62, cy + s * 0.55);
+    ctx2d.stroke();
+    ctx2d.fillStyle = '#aab0b8';
+    ctx2d.beginPath();
+    ctx2d.arc(cx + s * 0.66, cy + s * 0.55, s * 0.08, 0, Math.PI * 2);
+    ctx2d.fill();
+
+    // Name plaque
+    ctx2d.fillStyle = '#7a1a26';
+    ctx2d.font = 'bold 56px sans-serif';
+    ctx2d.textAlign = 'center';
+    ctx2d.fillText('GANESH', cx, cy + s * 1.05);
+  })(280, 540, 230);
+
+  // ----- Jesus (right half, centered around x=768, y=520) -----
+  (function drawJesus(cx, cy, s) {
+    // Golden halo
+    ctx2d.fillStyle = '#f8e0a0';
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy - s * 0.4, s * 0.58, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#d6a737';
+    ctx2d.lineWidth = 8;
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy - s * 0.4, s * 0.55, 0, Math.PI * 2);
+    ctx2d.stroke();
+    // Halo rays
+    ctx2d.strokeStyle = '#d6a737';
+    ctx2d.lineWidth = 4;
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      ctx2d.beginPath();
+      ctx2d.moveTo(cx + Math.cos(a) * s * 0.6, cy - s * 0.4 + Math.sin(a) * s * 0.6);
+      ctx2d.lineTo(cx + Math.cos(a) * s * 0.72, cy - s * 0.4 + Math.sin(a) * s * 0.72);
+      ctx2d.stroke();
+    }
+
+    // White robe
+    ctx2d.fillStyle = '#f8f4e8';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.6, cy + s * 0.95);
+    ctx2d.lineTo(cx + s * 0.6, cy + s * 0.95);
+    ctx2d.lineTo(cx + s * 0.42, cy + s * 0.1);
+    ctx2d.lineTo(cx - s * 0.42, cy + s * 0.1);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#8a7a5a';
+    ctx2d.lineWidth = 3;
+    ctx2d.stroke();
+
+    // Red mantle / sash from one shoulder
+    ctx2d.fillStyle = '#c8102e';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.42, cy + s * 0.1);
+    ctx2d.lineTo(cx + s * 0.42, cy + s * 0.1);
+    ctx2d.lineTo(cx + s * 0.34, cy + s * 0.45);
+    ctx2d.lineTo(cx - s * 0.34, cy + s * 0.45);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#7a0a18';
+    ctx2d.lineWidth = 2;
+    ctx2d.stroke();
+
+    // Outstretched arms (robe sleeves)
+    ctx2d.fillStyle = '#f8f4e8';
+    ctx2d.strokeStyle = '#8a7a5a';
+    ctx2d.lineWidth = 3;
+    // Left arm
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.4, cy + s * 0.1);
+    ctx2d.lineTo(cx - s * 0.95, cy + s * 0.08);
+    ctx2d.lineTo(cx - s * 0.95, cy + s * 0.25);
+    ctx2d.lineTo(cx - s * 0.4, cy + s * 0.32);
+    ctx2d.closePath();
+    ctx2d.fill(); ctx2d.stroke();
+    // Right arm
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + s * 0.4, cy + s * 0.1);
+    ctx2d.lineTo(cx + s * 0.95, cy + s * 0.08);
+    ctx2d.lineTo(cx + s * 0.95, cy + s * 0.25);
+    ctx2d.lineTo(cx + s * 0.4, cy + s * 0.32);
+    ctx2d.closePath();
+    ctx2d.fill(); ctx2d.stroke();
+
+    // Hands (skin) with stigmata dots
+    ctx2d.fillStyle = '#f2cfa6';
+    ctx2d.strokeStyle = '#a8825a';
+    ctx2d.lineWidth = 2;
+    ctx2d.beginPath();
+    ctx2d.arc(cx - s * 0.97, cy + s * 0.17, s * 0.11, 0, Math.PI * 2);
+    ctx2d.fill(); ctx2d.stroke();
+    ctx2d.beginPath();
+    ctx2d.arc(cx + s * 0.97, cy + s * 0.17, s * 0.11, 0, Math.PI * 2);
+    ctx2d.fill(); ctx2d.stroke();
+    ctx2d.fillStyle = '#c8102e';
+    ctx2d.beginPath();
+    ctx2d.arc(cx - s * 0.97, cy + s * 0.17, s * 0.025, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.arc(cx + s * 0.97, cy + s * 0.17, s * 0.025, 0, Math.PI * 2);
+    ctx2d.fill();
+
+    // Sacred heart on chest
+    ctx2d.fillStyle = '#c8102e';
+    const hx = cx, hy = cy + s * 0.28, hs = s * 0.13;
+    ctx2d.beginPath();
+    ctx2d.moveTo(hx, hy + hs * 0.55);
+    ctx2d.bezierCurveTo(hx - hs * 1.2, hy - hs * 0.3, hx - hs * 1.6, hy + hs * 0.5, hx, hy + hs * 1.5);
+    ctx2d.bezierCurveTo(hx + hs * 1.6, hy + hs * 0.5, hx + hs * 1.2, hy - hs * 0.3, hx, hy + hs * 0.55);
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#fff8e0';
+    ctx2d.lineWidth = 4;
+    ctx2d.stroke();
+    // Flame on top of heart
+    ctx2d.fillStyle = '#f0c958';
+    ctx2d.beginPath();
+    ctx2d.moveTo(hx, hy - hs * 0.4);
+    ctx2d.quadraticCurveTo(hx + hs * 0.4, hy - hs * 1.2, hx, hy - hs * 1.5);
+    ctx2d.quadraticCurveTo(hx - hs * 0.4, hy - hs * 1.2, hx, hy - hs * 0.4);
+    ctx2d.fill();
+
+    // Long brown hair (behind head)
+    ctx2d.fillStyle = '#5a3a20';
+    ctx2d.beginPath();
+    ctx2d.ellipse(cx, cy - s * 0.2, s * 0.4, s * 0.55, 0, 0, Math.PI * 2);
+    ctx2d.fill();
+
+    // Head (skin)
+    ctx2d.fillStyle = '#f2cfa6';
+    ctx2d.beginPath();
+    ctx2d.arc(cx, cy - s * 0.35, s * 0.3, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#a8825a';
+    ctx2d.lineWidth = 2;
+    ctx2d.stroke();
+
+    // Beard
+    ctx2d.fillStyle = '#5a3a20';
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.22, cy - s * 0.3);
+    ctx2d.quadraticCurveTo(cx, cy + s * 0.05, cx + s * 0.22, cy - s * 0.3);
+    ctx2d.quadraticCurveTo(cx + s * 0.15, cy - s * 0.18, cx, cy - s * 0.15);
+    ctx2d.quadraticCurveTo(cx - s * 0.15, cy - s * 0.18, cx - s * 0.22, cy - s * 0.3);
+    ctx2d.closePath();
+    ctx2d.fill();
+
+    // Mustache
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - s * 0.13, cy - s * 0.27);
+    ctx2d.quadraticCurveTo(cx, cy - s * 0.22, cx + s * 0.13, cy - s * 0.27);
+    ctx2d.quadraticCurveTo(cx, cy - s * 0.24, cx - s * 0.13, cy - s * 0.27);
+    ctx2d.fill();
+
+    // Eyes (kind, gentle)
+    ctx2d.fillStyle = '#1a1a1a';
+    ctx2d.beginPath();
+    ctx2d.arc(cx - s * 0.09, cy - s * 0.38, s * 0.025, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.arc(cx + s * 0.09, cy - s * 0.38, s * 0.025, 0, Math.PI * 2);
+    ctx2d.fill();
+
+    // Name plaque
+    ctx2d.fillStyle = '#7a1a26';
+    ctx2d.font = 'bold 56px sans-serif';
+    ctx2d.textAlign = 'center';
+    ctx2d.fillText('JESUS', cx, cy + s * 1.05);
+  })(768, 540, 230);
+
+  // "VS" in the bottom center
+  ctx2d.fillStyle = '#7a1a26';
+  ctx2d.font = 'bold 96px sans-serif';
+  ctx2d.fillText('— VS —', 512, 940);
+
   const logoTex = new THREE.CanvasTexture(logoCanvas);
+  logoTex.anisotropy = 4;
   const logo = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.2, 4.2),
+    new THREE.PlaneGeometry(6.4, 6.4),
     new THREE.MeshStandardMaterial({ map: logoTex, transparent: false, roughness: 0.9 })
   );
   logo.rotation.x = -Math.PI / 2;
@@ -1676,12 +2053,18 @@ function buildFighter(belief, side /* -1 left, +1 right */) {
   group.add(armL);
   group.add(armR);
 
+  // Floating name banner above head (so fighters are recognizable)
+  const cornerColor = side < 0 ? '#2b6cb0' : '#c8102e';
+  const label = buildNameLabel(belief, cornerColor);
+  label.position.set(0, 3.55, 0);
+  group.add(label);
+
   // Place + face center
   group.position.set(side * 1.8, 0, 0);
   group.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
 
   return {
-    group, hips, torso, headGroup, armL, armR, legL, legR,
+    group, hips, torso, headGroup, armL, armR, legL, legR, label,
     side, belief,
     // Animation state
     state: 'idle',
@@ -1690,6 +2073,104 @@ function buildFighter(belief, side /* -1 left, +1 right */) {
     bobPhase: Math.random() * Math.PI * 2,
     facing: side > 0 ? -Math.PI / 2 : Math.PI / 2,
   };
+}
+
+function buildNameLabel(text, accentCss) {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 1024, 256);
+  // Black banner with thick accent border
+  ctx.fillStyle = 'rgba(15,15,15,0.92)';
+  ctx.fillRect(20, 60, 984, 150);
+  ctx.strokeStyle = accentCss;
+  ctx.lineWidth = 12;
+  ctx.strokeRect(20, 60, 984, 150);
+  // Gold inner outline
+  ctx.strokeStyle = '#d6a737';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(36, 76, 952, 118);
+  // Text
+  ctx.fillStyle = '#fff7df';
+  ctx.font = 'bold 96px Bebas Neue, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text.toUpperCase(), 512, 138);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  tex.minFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(4.2, 1.05, 1);
+  sprite.renderOrder = 999;
+  return sprite;
+}
+
+// Impact starburst sprite — "POW!" / "WHAM!" / "KO!"
+function buildImpactSprite(text, color) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 512, 512);
+  // Starburst
+  ctx.fillStyle = '#ffeb3b';
+  ctx.strokeStyle = color || '#c8102e';
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  const points = 14;
+  for (let i = 0; i < points * 2; i++) {
+    const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const r = i % 2 === 0 ? 240 : 130;
+    const x = 256 + Math.cos(a) * r;
+    const y = 256 + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Inner star
+  ctx.fillStyle = '#fffacd';
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const a = (i / (points * 2)) * Math.PI * 2 + Math.PI / 14;
+    const r = i % 2 === 0 ? 150 : 80;
+    const x = 256 + Math.cos(a) * r;
+    const y = 256 + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  // Text
+  ctx.fillStyle = color || '#c8102e';
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 8;
+  ctx.font = 'bold 160px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.strokeText(text, 256, 270);
+  ctx.fillText(text, 256, 270);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(1.6, 1.6, 1);
+  sprite.renderOrder = 1000;
+  return sprite;
+}
+
+// Pool of impact sprites that can be triggered at any position
+const impactPool = [];
+function spawnImpact(world, text = 'POW!', big = false) {
+  const colors = { 'POW!': '#c8102e', 'WHAM!': '#ff8800', 'BOOM!': '#8e44ad', 'K.O.!': '#000' };
+  const sprite = buildImpactSprite(text, colors[text] || '#c8102e');
+  sprite.position.copy(world);
+  sprite.scale.set(big ? 3.0 : 1.6, big ? 3.0 : 1.6, 1);
+  sprite.userData.life = 0;
+  sprite.userData.maxLife = big ? 1.6 : 0.55;
+  sprite.userData.baseScale = big ? 3.0 : 1.6;
+  scene.add(sprite);
+  impactPool.push(sprite);
 }
 
 /* ============================================================
@@ -1862,76 +2343,109 @@ function updateFighter(f, t, dt) {
 
   switch (f.state) {
     case 'idle': {
-      // Bounce + sway
-      bobY = Math.sin(phase) * 0.04;
-      bodyTilt = Math.sin(phase * 0.5) * 0.03;
-      // Guard up slightly
-      targetArmL = { rx: 1.1, rz: 0.5 };
-      targetArmR = { rx: 1.1, rz: -0.5 };
+      // Bigger bounce — visible action even between punches
+      bobY = Math.sin(phase * 1.4) * 0.09;
+      bodyTilt = Math.sin(phase * 0.7) * 0.06;
+      // Guard up, gloves near chin
+      targetArmL = { rx: 0.9, rz: 0.7 };
+      targetArmR = { rx: 0.9, rz: -0.7 };
       break;
     }
     case 'jab': {
-      // Quick left punch forward (toward opponent = -z in local space since they face -z)
-      const t0 = f.stateTimer / 0.3;
-      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const dur = 0.28;
+      const t0 = f.stateTimer / dur;
+      const e = t0 < 0.35 ? t0 / 0.35 : 1 - (t0 - 0.35) / 0.65;
       const extend = Math.max(0, Math.min(1, e));
-      targetArmL = { rx: -0.2 - extend * 1.0, rz: 0.1 };
-      targetArmR = { rx: 1.1, rz: -0.5 };
-      bodyZ = -extend * 0.15;
-      if (f.stateTimer > 0.35) setFighterState(f, 'idle');
+      // Big telegraphed jab — shoulder rotates almost straight out
+      targetArmL = { rx: -1.55 + (1 - extend) * 1.2, rz: 0.05 };
+      targetArmR = { rx: 0.8, rz: -0.7 };
+      bodyZ = -extend * 0.35;
+      bodyRot = -extend * 0.1;
+      if (f.stateTimer > dur + 0.05) setFighterState(f, 'idle');
       break;
     }
     case 'cross': {
-      const t0 = f.stateTimer / 0.35;
-      const e = t0 < 0.35 ? t0 / 0.35 : 1 - (t0 - 0.35) / 0.65;
+      const dur = 0.32;
+      const t0 = f.stateTimer / dur;
+      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
       const extend = Math.max(0, Math.min(1, e));
-      targetArmR = { rx: -0.2 - extend * 1.0, rz: -0.05 };
-      targetArmL = { rx: 1.0, rz: 0.4 };
-      bodyZ = -extend * 0.2;
-      bodyRot = extend * 0.15;
-      if (f.stateTimer > 0.45) setFighterState(f, 'idle');
+      targetArmR = { rx: -1.7 + (1 - extend) * 1.3, rz: -0.1 };
+      targetArmL = { rx: 0.7, rz: 0.55 };
+      bodyZ = -extend * 0.5;
+      bodyRot = extend * 0.35;
+      if (f.stateTimer > dur + 0.05) setFighterState(f, 'idle');
       break;
     }
     case 'hook': {
-      const t0 = f.stateTimer / 0.4;
+      const dur = 0.38;
+      const t0 = f.stateTimer / dur;
       const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
       const extend = Math.max(0, Math.min(1, e));
-      targetArmR = { rx: 0.3, rz: -1.0 - extend * 0.4 };
-      targetArmL = { rx: 1.1, rz: 0.4 };
-      bodyRot = extend * 0.3;
-      bodyZ = -extend * 0.1;
-      if (f.stateTimer > 0.55) setFighterState(f, 'idle');
+      // Wide looping hook
+      targetArmR = { rx: -0.4 - extend * 0.6, rz: -1.6 - extend * 0.5 };
+      targetArmL = { rx: 0.9, rz: 0.6 };
+      bodyRot = extend * 0.6;
+      bodyZ = -extend * 0.25;
+      if (f.stateTimer > dur + 0.08) setFighterState(f, 'idle');
+      break;
+    }
+    case 'uppercut': {
+      const dur = 0.4;
+      const t0 = f.stateTimer / dur;
+      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const extend = Math.max(0, Math.min(1, e));
+      // From low to high
+      targetArmR = { rx: 0.5 - extend * 2.5, rz: -0.3 };
+      targetArmL = { rx: 0.9, rz: 0.5 };
+      bodyZ = -extend * 0.45;
+      bobY = -0.18 + extend * 0.32; // crouch then explode up
+      if (f.stateTimer > dur + 0.08) setFighterState(f, 'idle');
       break;
     }
     case 'block': {
       targetArmL = { rx: -0.3, rz: 0.3 };
       targetArmR = { rx: -0.3, rz: -0.3 };
-      bodyZ = 0.08;
+      bodyZ = 0.12;
       if (f.stateTimer > 0.4) setFighterState(f, 'idle');
       break;
     }
+    case 'flinch': {
+      // Quick head-snap-back from a landed hit
+      const k = Math.min(1, f.stateTimer / 0.2);
+      bodyTilt = -0.25 * Math.sin(k * Math.PI);
+      bodyZ = 0.18 * Math.sin(k * Math.PI);
+      targetArmL = { rx: 0.6, rz: 0.8 };
+      targetArmR = { rx: 0.6, rz: -0.8 };
+      if (f.stateTimer > 0.22) setFighterState(f, 'idle');
+      break;
+    }
     case 'stagger': {
-      const k = Math.min(1, f.stateTimer / 0.25);
-      bodyTilt = -0.4 * (1 - Math.abs(k - 0.5) * 2);
-      bodyZ = 0.3 * k;
-      targetArmL = { rx: 0.6, rz: 0.7 };
-      targetArmR = { rx: 0.6, rz: -0.7 };
-      if (f.stateTimer > 0.5) setFighterState(f, 'idle');
+      const k = Math.min(1, f.stateTimer / 0.6);
+      bodyTilt = -0.5 * (1 - Math.abs(k - 0.5) * 2);
+      bodyZ = 0.45 * k;
+      bobY = Math.sin(f.stateTimer * 8) * 0.06;
+      targetArmL = { rx: 0.4, rz: 1.0 };
+      targetArmR = { rx: 0.4, rz: -1.0 };
+      if (f.stateTimer > 0.8) setFighterState(f, 'idle');
       break;
     }
     case 'ko': {
-      // Lay down (flat on back)
-      const k = Math.min(1, f.stateTimer / 1.2);
-      g.position.y = -k * 0.0;
-      // Pin the fighter, rotate to lay flat
-      const targetTilt = -Math.PI / 2;
-      // We use bodyTilt slot to drive torso tilt (but here we tilt the entire group)
-      g.rotation.x = targetTilt * k;
-      // Slide back slightly when falling
-      g.position.z = (f.koZ ?? 0) - k * 0.6;
+      const k = Math.min(1, f.stateTimer / 1.0);
+      // Topple backward: tilt around their facing-perpendicular axis.
+      // The fighter has rotation.y set to face inward. Setting rotation.z tips
+      // them onto their back in a way that combines cleanly with the Y rotation.
+      const targetTilt = Math.PI / 2 * f.side; // left fighter (side -1) tips one way, right the other
+      g.rotation.z = targetTilt * k;
+      // Slide back away from opponent (in world x, away from origin)
+      g.position.x = f.side * 1.8 + f.side * k * 1.1;
+      // Drop the body height as they fall
+      g.position.y = -k * 0.3;
       // Arms splay
-      targetArmL = { rx: 0.2, rz: 1.2 };
-      targetArmR = { rx: 0.2, rz: -1.2 };
+      targetArmL = { rx: 0.2, rz: 1.4 };
+      targetArmR = { rx: 0.2, rz: -1.4 };
+      // Twitch on the floor for a beat
+      const twitch = f.stateTimer > 1.0 ? Math.sin(f.stateTimer * 14) * 0.05 : 0;
+      g.rotation.x = twitch;
       break;
     }
     case 'victory': {
@@ -2063,25 +2577,27 @@ function planBout(b1, b2) {
 }
 
 function generateEvents(durationS, winnerIsRight) {
-  // Generate a sequence of punches/dodges over the duration.
-  // Winner lands more punches; loser staggers at the end.
+  // Tighter, punchier sequence — frequent attacks, almost all land for max action.
   const events = [];
-  let t = 1.0;
-  while (t < durationS - 3.0) {
-    const winnerAttacks = Math.random() < 0.65;
+  let t = 0.6;
+  const moves = ['jab', 'cross', 'hook', 'uppercut'];
+  while (t < durationS - 2.6) {
+    // Winner aggressive ~70% of the time
+    const winnerAttacks = Math.random() < 0.7;
     const attacker = winnerAttacks ? 'winner' : 'loser';
     const defender = winnerAttacks ? 'loser' : 'winner';
-    const moveRoll = Math.random();
-    const move = moveRoll < 0.45 ? 'jab' : moveRoll < 0.78 ? 'cross' : 'hook';
-    events.push({ t, type: 'attack', attacker, defender, move, lands: winnerAttacks || Math.random() < 0.5 });
-    t += 0.55 + Math.random() * 0.7;
+    const move = moves[Math.floor(Math.random() * moves.length)];
+    // Most punches connect for visible action
+    const lands = winnerAttacks ? Math.random() < 0.85 : Math.random() < 0.55;
+    events.push({ t, type: 'attack', attacker, defender, move, lands });
+    t += 0.42 + Math.random() * 0.35; // 0.42s–0.77s between strikes
   }
-  // Final stagger + finishing move at the end
-  events.push({ t: durationS - 2.6, type: 'attack', attacker: 'winner', defender: 'loser', move: 'cross', lands: true, big: true });
-  events.push({ t: durationS - 2.2, type: 'stagger', who: 'loser' });
-  events.push({ t: durationS - 1.6, type: 'attack', attacker: 'winner', defender: 'loser', move: 'hook', lands: true, finisher: true });
-  events.push({ t: durationS - 1.2, type: 'ko', who: 'loser' });
-  events.push({ t: durationS - 0.6, type: 'victory', who: 'winner' });
+  // Finisher sequence
+  events.push({ t: durationS - 2.4, type: 'attack', attacker: 'winner', defender: 'loser', move: 'cross', lands: true, big: true });
+  events.push({ t: durationS - 1.9, type: 'stagger', who: 'loser' });
+  events.push({ t: durationS - 1.2, type: 'attack', attacker: 'winner', defender: 'loser', move: 'uppercut', lands: true, finisher: true });
+  events.push({ t: durationS - 0.85, type: 'ko', who: 'loser' });
+  events.push({ t: durationS - 0.2, type: 'victory', who: 'winner' });
   return events;
 }
 
@@ -2122,7 +2638,7 @@ function startBout(b1, b2) {
   const winnerFighter = winnerIsB1 ? f1 : f2;
   const loserFighter = winnerIsB1 ? f2 : f1;
 
-  const duration = 28 + Math.random() * 3; // ~28-31s of action
+  const duration = 13 + Math.random() * 2; // ~13–15s of action — short and punchy
   const events = generateEvents(duration, !winnerIsB1);
 
   bout = {
@@ -2233,6 +2749,11 @@ function updateBout(t, dt) {
   }
 }
 
+// Screen-shake state
+let screenShake = 0;
+function shakeScreen(amount) { screenShake = Math.max(screenShake, amount); }
+
+const IMPACT_WORDS = ['POW!', 'WHAM!', 'BOOM!', 'BAM!', 'SOCK!', 'THWACK!', 'KAPOW!'];
 function handleEvent(ev) {
   if (!bout) return;
   const winner = bout.winner;
@@ -2243,31 +2764,46 @@ function handleEvent(ev) {
     const def = ev.defender === 'winner' ? winner : loser;
     setFighterState(att, ev.move);
     if (ev.lands) {
-      // small recoil on defender
+      // Punch-landing fires ~200ms after the swing starts (when arm is extended)
       setTimeout(() => {
-        if (def.state !== 'ko') {
-          // Brief flinch via stagger-lite
-          def.bobPhase += 1.3;
-          // Tiny push back
-          // (No direct position change; idle bob covers it)
-        }
+        if (def.state === 'ko') return;
+        // Visible flinch
+        setFighterState(def, 'flinch');
+        // Spawn an impact-star sprite roughly between the fighters at head height
+        const impactX = (att.group.position.x + def.group.position.x) * 0.5;
+        const impactY = 2.2 + (Math.random() - 0.5) * 0.3;
+        const impactZ = (Math.random() - 0.5) * 0.4;
+        const word = ev.finisher ? 'K.O.!' : (ev.big ? 'BOOM!' : IMPACT_WORDS[Math.floor(Math.random() * IMPACT_WORDS.length)]);
+        spawnImpact({ x: impactX, y: impactY, z: impactZ }, word, ev.big || ev.finisher);
+        playPunch(ev.big || ev.finisher ? 1.8 : 1.0);
+        shakeScreen(ev.finisher ? 0.5 : ev.big ? 0.25 : 0.12);
+        if (ev.finisher) showKOOverlay();
       }, 180);
-      setTimeout(() => playPunch(ev.big || ev.finisher ? 1.6 : 1.0), 200);
     }
   } else if (ev.type === 'stagger') {
     const who = ev.who === 'winner' ? winner : loser;
     setFighterState(who, 'stagger');
-    setTimeout(playCrowd, 200);
+    setTimeout(playCrowd, 100);
   } else if (ev.type === 'ko') {
     const who = ev.who === 'winner' ? winner : loser;
     who.koZ = who.group.position.z;
     setFighterState(who, 'ko');
-    playPunch(2.0);
-    setTimeout(playCrowd, 100);
+    playPunch(2.2);
+    shakeScreen(0.6);
+    spawnImpact({ x: who.group.position.x, y: 1.6, z: 0 }, 'K.O.!', true);
+    setTimeout(playCrowd, 80);
   } else if (ev.type === 'victory') {
     const who = ev.who === 'winner' ? winner : loser;
     setFighterState(who, 'victory');
   }
+}
+
+function showKOOverlay() {
+  const ri = document.getElementById('round-info');
+  ri.textContent = 'K.O.!';
+  ri.classList.remove('show');
+  void ri.offsetWidth;
+  ri.classList.add('show');
 }
 
 /* ============================================================
@@ -2282,6 +2818,36 @@ function animate() {
   audience.children.forEach(c => {
     c.position.y = c.userData.baseY + Math.sin(t * 2.5 + c.userData.basePhase) * 0.04;
   });
+
+  // Impact-sprite lifecycle: scale up then fade out
+  for (let i = impactPool.length - 1; i >= 0; i--) {
+    const sp = impactPool[i];
+    sp.userData.life += dt;
+    const u = sp.userData.life / sp.userData.maxLife;
+    if (u >= 1) {
+      scene.remove(sp);
+      sp.material.map?.dispose();
+      sp.material.dispose();
+      impactPool.splice(i, 1);
+      continue;
+    }
+    // Quick scale-up burst, then linear fade
+    const base = sp.userData.baseScale;
+    const s = base * (u < 0.2 ? (0.4 + u * 3) : 1 + (u - 0.2) * 0.4);
+    sp.scale.set(s, s, 1);
+    sp.material.opacity = u < 0.5 ? 1 : 1 - (u - 0.5) * 2;
+    // Slight upward drift
+    sp.position.y += dt * 0.6;
+    // Random wobble
+    sp.material.rotation = Math.sin(sp.userData.life * 20) * 0.15;
+  }
+
+  // Screen shake — quick decay; applied to camera xy
+  if (screenShake > 0.001) {
+    screenShake *= Math.pow(0.0001, dt);
+  } else {
+    screenShake = 0;
+  }
 
   // Brass bell swing — damped oscillation; clapper lags for clang feel
   if (bellSwingEnergy > 0.005) {
@@ -2302,8 +2868,11 @@ function animate() {
   // Update bout
   if (bout) updateBout(t, dt);
 
-  // Subtle camera sway
-  camera.position.x = Math.sin(t * 0.1) * 0.3;
+  // Subtle camera sway + impact-driven shake
+  const shakeX = (Math.random() - 0.5) * screenShake;
+  const shakeY = (Math.random() - 0.5) * screenShake;
+  camera.position.x = Math.sin(t * 0.1) * 0.3 + shakeX;
+  camera.position.y = 5.6 + shakeY;
   camera.lookAt(0, 1.5, 0);
 
   renderer.render(scene, camera);
