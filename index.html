@@ -354,7 +354,6 @@
     align-items: center;
     justify-content: center;
     transition: filter 0.15s, transform 0.05s, box-shadow 0.05s;
-    pointer-events: auto;
     z-index: 2;
   }
   #nc-close:hover { filter: brightness(1.15); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #000; }
@@ -394,7 +393,6 @@
     gap: 12px;
     margin-top: 20px;
     justify-content: center;
-    pointer-events: auto;
   }
   .share-btn {
     width: 44px;
@@ -407,7 +405,6 @@
     justify-content: center;
     transition: filter 0.15s, transform 0.05s, box-shadow 0.05s;
     box-shadow: 3px 3px 0 #000;
-    pointer-events: auto;
   }
   .share-btn:hover { filter: brightness(1.15); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #000; }
   .share-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
@@ -417,9 +414,17 @@
   .share-ig { background: linear-gradient(135deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888); color: #fff; }
   .share-save { background: var(--gold); color: #1a0a02; }
   /* The notecard wrapper has pointer-events:none so clicks pass through to
-     the canvas — but we need the share buttons + notecard to receive clicks. */
-  #notecard { pointer-events: auto; }
-  #share-row { pointer-events: auto; }
+     the canvas — and crucially also to the dropdown list above it. We only
+     enable pointer-events on the notecard and its children when .show is
+     applied, otherwise the hidden card (sitting at z-index 40) silently
+     blocks clicks for any UI element visually below it (the dropdown list
+     items in the lower half of the screen, etc.). */
+  #notecard-wrap.show #notecard,
+  #notecard-wrap.show #share-row,
+  #notecard-wrap.show .share-btn,
+  #notecard-wrap.show #nc-close {
+    pointer-events: auto;
+  }
 
   /* During a live bout, dim the top HUD so it doesn't compete with the
      fighter banners. Restored when the bout ends (or before it starts). */
