@@ -329,7 +329,30 @@
     letter-spacing: 0.08em;
     color: var(--crimson);
     margin-bottom: 6px;
+    padding-right: 40px;
   }
+  #nc-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: var(--crimson);
+    color: #fff;
+    border: 2px solid #1a1a1a;
+    box-shadow: 3px 3px 0 #000;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.15s, transform 0.05s, box-shadow 0.05s;
+    pointer-events: auto;
+    z-index: 2;
+  }
+  #nc-close:hover { filter: brightness(1.15); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #000; }
+  #nc-close:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+  #nc-close svg { display: block; }
   #notecard .winner-line {
     font-family: 'Bungee', sans-serif;
     font-size: clamp(24px, 3vw, 40px);
@@ -544,6 +567,11 @@
 
 <div id="notecard-wrap">
   <div id="notecard">
+    <button id="nc-close" type="button" aria-label="Close ruling">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path fill="currentColor" d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6L17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6 6.4 5Z"/>
+      </svg>
+    </button>
     <h2>OFFICIAL RULING</h2>
     <div class="winner-line" id="nc-winner"></div>
     <div class="move-line" id="nc-move"></div>
@@ -3330,6 +3358,19 @@ document.getElementById('share-ig').addEventListener('click', async () => {
 document.getElementById('share-save').addEventListener('click', () => {
   const canvas = generateShareImage();
   downloadCanvas(canvas, `battle-of-beliefs-${(bout?.winnerName ?? 'verdict').toLowerCase().replace(/\W+/g, '-')}.png`);
+});
+
+// Close the Official Ruling card — also hides the rematch button so the user
+// returns to the clean idle view and can pick a new matchup from the HUD.
+function closeNotecard() {
+  document.getElementById('notecard-wrap').classList.remove('show');
+  document.getElementById('replay').classList.remove('show');
+}
+document.getElementById('nc-close').addEventListener('click', closeNotecard);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('notecard-wrap').classList.contains('show')) {
+    closeNotecard();
+  }
 });
 
 // Friendly idle preview: build two placeholder fighters
